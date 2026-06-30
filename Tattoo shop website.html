@@ -274,6 +274,57 @@
   .confirm-box p{color:var(--bone-dim); max-width:420px; margin:0 auto 6px;}
   .form-msg{font-size:13px; color:var(--blood-bright); margin-top:-10px; margin-bottom:18px; min-height:18px;}
 
+  /* ---------- STAFF DASHBOARD ---------- */
+  .staff-calendar{display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:14px;}
+  .staff-day{border:1px solid var(--line); padding:14px;}
+  .staff-day h4{font-family:'Oswald',sans-serif; font-size:14px; margin-bottom:10px; color:var(--gold); text-transform:uppercase; letter-spacing:0.06em;}
+  .staff-slot{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 0; border-top:1px solid var(--line); font-family:'JetBrains Mono',monospace; font-size:11.5px;}
+  .staff-slot:first-of-type{border-top:none;}
+  .staff-slot .lbl{color:var(--bone-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .staff-slot.booked .lbl{color:var(--bone);}
+  .staff-slot.blocked .lbl{color:var(--blood-bright);}
+  .staff-slot button{
+    flex-shrink:0;
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; padding:4px 8px; border:1px solid var(--line); background:transparent; color:var(--bone-dim); cursor:pointer;
+  }
+  .staff-slot button:hover{border-color:var(--blood-bright); color:var(--bone);}
+  .staff-slot.booked .lbl{cursor:pointer;}
+  .staff-slot.booked .lbl:hover{color:var(--gold); text-decoration:underline;}
+
+  /* ---------- EDIT APPOINTMENT MODAL ---------- */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; z-index:200;
+    background:rgba(14,13,13,0.82);
+    align-items:center; justify-content:center;
+    padding:24px;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-box{
+    width:100%; max-width:480px;
+    background:var(--ink-2);
+    border:1px solid var(--line);
+    padding:36px;
+    position:relative;
+    max-height:90vh; overflow-y:auto;
+  }
+  .modal-box::before{
+    content:""; position:absolute; top:10px; left:10px; right:10px; bottom:10px;
+    border:1px dashed rgba(201,162,103,0.25);
+    pointer-events:none;
+  }
+  .modal-close{
+    position:absolute; top:14px; right:14px;
+    background:none; border:none; color:var(--bone-dim); font-size:22px; cursor:pointer; line-height:1;
+  }
+  .modal-close:hover{color:var(--blood-bright);}
+  .modal-box h3{font-size:21px; margin-bottom:6px;}
+  .modal-sub{font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--bone-dim); margin-bottom:24px; letter-spacing:0.04em;}
+  .modal-box .field{margin-bottom:18px;}
+  .modal-actions{display:flex; justify-content:space-between; align-items:center; gap:14px; margin-top:8px; flex-wrap:wrap;}
+  .modal-msg{font-size:13px; color:var(--blood-bright); min-height:18px; margin-bottom:10px;}
+  .btn-danger{background:transparent; border:1px solid var(--blood); color:var(--blood-bright);}
+  .btn-danger:hover{background:var(--blood); color:var(--bone);}
+
   /* ---------- FOOTER ---------- */
   footer{padding:50px 0; }
   .foot-inner{display:flex; justify-content:space-between; flex-wrap:wrap; gap:24px; align-items:center;}
@@ -301,6 +352,7 @@
       <li><a href="#about">About</a></li>
       <li><a href="#gallery">Gallery</a></li>
       <li><a href="#booking">Book</a></li>
+      <li><a href="#staff">Staff</a></li>
     </ul>
     <a href="#booking" class="navcta">Book a Slot</a>
   </nav>
@@ -448,6 +500,82 @@
   </div>
 </section>
 
+<section id="staff">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <span class="eyebrow">04 — Staff Access</span>
+        <h2>Artist schedule login</h2>
+      </div>
+      <p>Sign in to block off time, view upcoming bookings, or cancel a slot. Each artist only sees and edits their own schedule.</p>
+    </div>
+
+    <div class="booking-shell" id="staffLoginShell">
+      <span class="step-label">Sign in</span>
+      <div class="form-row">
+        <div class="field">
+          <label for="staffEmail">Email</label>
+          <input type="email" id="staffEmail" autocomplete="username">
+        </div>
+        <div class="field">
+          <label for="staffPassword">Password</label>
+          <input type="password" id="staffPassword" autocomplete="current-password">
+        </div>
+      </div>
+      <div class="form-msg" id="staffMsg"></div>
+      <button class="btn btn-primary" id="staffLoginBtn" type="button">Sign In</button>
+    </div>
+
+    <div class="booking-shell" id="staffDashboard" style="display:none;">
+      <div class="summary-bar" style="border-top:none; padding-top:0; margin-top:0; margin-bottom:30px;">
+        <div class="sum-text">Signed in as <b id="staffArtistName"></b></div>
+        <button class="btn btn-ghost" id="staffLogoutBtn" type="button">Sign Out</button>
+      </div>
+      <span class="step-label">Your schedule — next 14 open studio days</span>
+      <div id="staffCalendar" class="staff-calendar"></div>
+    </div>
+  </div>
+</section>
+
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <button class="modal-close" id="editModalClose" type="button" aria-label="Close">&times;</button>
+    <h3>Edit Appointment</h3>
+    <p class="modal-sub" id="editModalSub"></p>
+
+    <div class="field">
+      <label for="editName">Full Name</label>
+      <input type="text" id="editName" autocomplete="off">
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label for="editPhone">Phone Number</label>
+        <input type="tel" id="editPhone" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="editTime">Time</label>
+        <select id="editTime"></select>
+      </div>
+    </div>
+    <div class="field">
+      <label for="editDate">Date</label>
+      <select id="editDate"></select>
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label for="editNote">Tattoo Idea / Notes</label>
+      <textarea id="editNote"></textarea>
+    </div>
+
+    <div class="modal-msg" id="editModalMsg"></div>
+
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="editDeleteBtn" type="button">Cancel Booking</button>
+      <button class="btn btn-primary" id="editSaveBtn" type="button">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+
 <footer>
   <div class="wrap foot-inner">
     <a href="#top" class="brand">Crow <span>&amp;</span> Iron</a>
@@ -525,11 +653,11 @@ renderGallery("all");
    ========================================================= */
 
 // ---- Fill these in with your own Supabase project's values ----
-const SUPABASE_URL = "https://bvsgrgdardumiabfewwr.supabase.co/rest/v1/";
+const SUPABASE_URL = "https://bvsgrgdardumiabfewwr.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable__Qic8J69dJyd76lnVw2m-A_OaF0R9nO";
 // -----------------------------------------------------------------
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let state = { artist:null, date:null, time:null };
 let takenSlots = new Set(); // holds "artist|date|time" strings that are already booked
@@ -555,18 +683,18 @@ async function loadAvailability(){
   const from = fmtDate(UPCOMING_DAYS[0]);
   const to = fmtDate(UPCOMING_DAYS[UPCOMING_DAYS.length - 1]);
 
-  const { data, error } = await supabase
-    .from("bookings")
-    .select("artist_id, appt_date, appt_time")
-    .gte("appt_date", from)
-    .lte("appt_date", to);
+  const [bookingsRes, blocksRes] = await Promise.all([
+    supabaseClient.from("bookings").select("artist_id, appt_date, appt_time").gte("appt_date", from).lte("appt_date", to),
+    supabaseClient.from("blocked_slots").select("artist_id, appt_date, appt_time").gte("appt_date", from).lte("appt_date", to)
+  ]);
 
-  if(error){
-    console.error("Could not load availability:", error.message);
-    return;
-  }
-  data.forEach(row => {
-    // appt_date comes back as "YYYY-MM-DD"
+  if(bookingsRes.error) console.error("Could not load bookings:", bookingsRes.error.message);
+  if(blocksRes.error) console.error("Could not load blocked slots:", blocksRes.error.message);
+
+  (bookingsRes.data || []).forEach(row => {
+    takenSlots.add(slotKey(row.artist_id, row.appt_date, row.appt_time));
+  });
+  (blocksRes.data || []).forEach(row => {
     takenSlots.add(slotKey(row.artist_id, row.appt_date, row.appt_time));
   });
 }
@@ -662,7 +790,7 @@ document.getElementById("confirmBtn").addEventListener("click", async () => {
 
   const k = slotKey(state.artist, state.date, state.time);
 
-  const { error } = await supabase.from("bookings").insert({
+  const { error } = await supabaseClient.from("bookings").insert({
     name: name,
     phone: phone,
     note: note || null,
@@ -672,7 +800,6 @@ document.getElementById("confirmBtn").addEventListener("click", async () => {
   });
 
   if(error){
-    // 23505 = unique_violation -> someone else booked this exact slot first
     if(error.code === "23505"){
       msg.textContent = "Someone just grabbed that slot — pick another time.";
       takenSlots.add(k);
@@ -719,7 +846,308 @@ function resetBooking(){
 (async function init(){
   await loadAvailability();
   renderAll();
+  await checkExistingStaffSession();
 })();
+
+/* =========================================================
+   STAFF / ARTIST DASHBOARD — Supabase Auth
+   Each artist signs in with their own email/password.
+   Their auth account is linked to an artist_id via the
+   artist_profiles table, so they only ever see/edit their
+   own slots (enforced both in the UI and by RLS policies).
+   ========================================================= */
+let staffArtistId = null;
+let staffBookingsById = {};
+
+document.getElementById("staffLoginBtn").addEventListener("click", async () => {
+  const email = document.getElementById("staffEmail").value.trim();
+  const password = document.getElementById("staffPassword").value;
+  const msg = document.getElementById("staffMsg");
+  msg.textContent = "";
+
+  if(!email || !password){ msg.textContent = "Enter your email and password."; return; }
+
+  const btn = document.getElementById("staffLoginBtn");
+  btn.disabled = true; btn.textContent = "Signing in…";
+
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+  btn.disabled = false; btn.textContent = "Sign In";
+
+  if(error){ msg.textContent = "Sign-in failed: " + error.message; return; }
+  await loadStaffProfile();
+});
+
+document.getElementById("staffLogoutBtn").addEventListener("click", async () => {
+  await supabaseClient.auth.signOut();
+  staffArtistId = null;
+  document.getElementById("staffDashboard").style.display = "none";
+  document.getElementById("staffLoginShell").style.display = "block";
+  document.getElementById("staffEmail").value = "";
+  document.getElementById("staffPassword").value = "";
+  document.getElementById("staffMsg").textContent = "";
+});
+
+async function checkExistingStaffSession(){
+  const { data } = await supabaseClient.auth.getSession();
+  if(data.session) await loadStaffProfile();
+}
+
+async function loadStaffProfile(){
+  const msg = document.getElementById("staffMsg");
+  const { data: profile, error } = await supabaseClient
+    .from("artist_profiles")
+    .select("artist_id")
+    .single();
+
+  if(error || !profile){
+    msg.textContent = "Signed in, but no artist profile is linked to this account yet.";
+    await supabaseClient.auth.signOut();
+    return;
+  }
+
+  staffArtistId = profile.artist_id;
+  const artist = ARTISTS.find(a => a.id === staffArtistId);
+  document.getElementById("staffArtistName").textContent = artist ? artist.name : staffArtistId;
+  document.getElementById("staffLoginShell").style.display = "none";
+  document.getElementById("staffDashboard").style.display = "block";
+  await renderStaffCalendar();
+}
+
+async function renderStaffCalendar(){
+  const wrap = document.getElementById("staffCalendar");
+  wrap.innerHTML = "<p style='color:var(--bone-dim); font-size:13px;'>Loading…</p>";
+
+  const from = fmtDate(UPCOMING_DAYS[0]);
+  const to = fmtDate(UPCOMING_DAYS[UPCOMING_DAYS.length - 1]);
+
+  const [bookingsRes, blocksRes] = await Promise.all([
+    supabaseClient.from("bookings").select("*").eq("artist_id", staffArtistId).gte("appt_date", from).lte("appt_date", to),
+    supabaseClient.from("blocked_slots").select("*").eq("artist_id", staffArtistId).gte("appt_date", from).lte("appt_date", to)
+  ]);
+
+  if(bookingsRes.error || blocksRes.error){
+    wrap.innerHTML = "<p style='color:var(--blood-bright); font-size:13px;'>Could not load your schedule.</p>";
+    return;
+  }
+
+  const bookingMap = {};
+  staffBookingsById = {};
+  (bookingsRes.data || []).forEach(b => {
+    bookingMap[`${b.appt_date}|${b.appt_time}`] = b;
+    staffBookingsById[b.id] = b;
+  });
+  const blockMap = {};
+  (blocksRes.data || []).forEach(b => { blockMap[`${b.appt_date}|${b.appt_time}`] = b; });
+
+  const dow = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  wrap.innerHTML = "";
+  UPCOMING_DAYS.forEach(d => {
+    const key = fmtDate(d);
+    const day = document.createElement("div");
+    day.className = "staff-day";
+    let rows = "";
+    DAILY_TIMES.forEach(t => {
+      const bk = bookingMap[`${key}|${t}`];
+      const blk = blockMap[`${key}|${t}`];
+      if(bk){
+        rows += `<div class="staff-slot booked"><span class="lbl" title="Click to edit" data-action="edit" data-id="${bk.id}">${t} — ${bk.name}</span>
+          <button data-action="cancel" data-id="${bk.id}">Cancel</button></div>`;
+      } else if(blk){
+        rows += `<div class="staff-slot blocked"><span class="lbl">${t} — Blocked</span>
+          <button data-action="unblock" data-id="${blk.id}">Unblock</button></div>`;
+      } else {
+        rows += `<div class="staff-slot"><span class="lbl">${t} — Open</span>
+          <button data-action="block" data-date="${key}" data-time="${t}">Block</button></div>`;
+      }
+    });
+    day.innerHTML = `<h4>${dow[d.getDay()]} ${d.getDate()}</h4>${rows}`;
+    wrap.appendChild(day);
+  });
+
+  wrap.querySelectorAll("button[data-action]").forEach(btn => {
+    btn.addEventListener("click", handleStaffAction);
+  });
+  wrap.querySelectorAll("span[data-action='edit']").forEach(span => {
+    span.addEventListener("click", () => openEditModal(span.dataset.id));
+  });
+}
+
+async function handleStaffAction(e){
+  const btn = e.currentTarget;
+  const action = btn.dataset.action;
+
+  if(action === "cancel" && !confirm("Cancel this customer's booking?")) return;
+
+  btn.disabled = true;
+
+  let error = null;
+  if(action === "block"){
+    ({ error } = await supabaseClient.from("blocked_slots").insert({
+      artist_id: staffArtistId, appt_date: btn.dataset.date, appt_time: btn.dataset.time
+    }));
+  } else if(action === "unblock"){
+    ({ error } = await supabaseClient.from("blocked_slots").delete().eq("id", btn.dataset.id));
+  } else if(action === "cancel"){
+    ({ error } = await supabaseClient.from("bookings").delete().eq("id", btn.dataset.id));
+  }
+
+  if(error) alert("Something went wrong: " + error.message);
+
+  await renderStaffCalendar();
+  await loadAvailability();
+  renderAll();
+}
+
+/* =========================================================
+   EDIT APPOINTMENT MODAL
+   Lets a signed-in staff member click any of their booked
+   times and update the customer's name/phone/note, or move
+   the booking to a different open date/time, or cancel it.
+   ========================================================= */
+const editModal = document.getElementById("editModal");
+let editingBookingId = null;
+
+function populateEditDateTimeOptions(currentDate, currentTime){
+  const dow = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const dateSel = document.getElementById("editDate");
+  const timeSel = document.getElementById("editTime");
+
+  dateSel.innerHTML = "";
+  UPCOMING_DAYS.forEach(d => {
+    const key = fmtDate(d);
+    const opt = document.createElement("option");
+    opt.value = key;
+    opt.textContent = `${dow[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}`;
+    if(key === currentDate) opt.selected = true;
+    dateSel.appendChild(opt);
+  });
+  // make sure the booking's existing date is selectable even if it falls outside the visible window
+  if(![...dateSel.options].some(o => o.value === currentDate)){
+    const opt = document.createElement("option");
+    opt.value = currentDate;
+    opt.textContent = currentDate + " (current)";
+    opt.selected = true;
+    dateSel.prepend(opt);
+  }
+
+  timeSel.innerHTML = "";
+  DAILY_TIMES.forEach(t => {
+    const opt = document.createElement("option");
+    opt.value = t;
+    opt.textContent = t;
+    if(t === currentTime) opt.selected = true;
+    timeSel.appendChild(opt);
+  });
+}
+
+function openEditModal(id){
+  const bk = staffBookingsById[id];
+  if(!bk) return;
+  editingBookingId = id;
+
+  document.getElementById("editModalMsg").textContent = "";
+  document.getElementById("editName").value = bk.name || "";
+  document.getElementById("editPhone").value = bk.phone || "";
+  document.getElementById("editNote").value = bk.note || "";
+  populateEditDateTimeOptions(bk.appt_date, bk.appt_time);
+
+  const artist = ARTISTS.find(a => a.id === bk.artist_id);
+  document.getElementById("editModalSub").textContent =
+    `${artist ? artist.name : bk.artist_id} — editing this customer's booking`;
+
+  const saveBtn = document.getElementById("editSaveBtn");
+  const delBtn = document.getElementById("editDeleteBtn");
+  saveBtn.disabled = false; saveBtn.textContent = "Save Changes";
+  delBtn.disabled = false; delBtn.textContent = "Cancel Booking";
+
+  editModal.classList.add("open");
+}
+
+function closeEditModal(){
+  editModal.classList.remove("open");
+  editingBookingId = null;
+}
+
+document.getElementById("editModalClose").addEventListener("click", closeEditModal);
+editModal.addEventListener("click", (e) => { if(e.target === editModal) closeEditModal(); });
+
+document.getElementById("editSaveBtn").addEventListener("click", async () => {
+  if(!editingBookingId) return;
+  const msg = document.getElementById("editModalMsg");
+  msg.textContent = "";
+
+  const name = document.getElementById("editName").value.trim();
+  const phone = document.getElementById("editPhone").value.trim();
+  const note = document.getElementById("editNote").value.trim();
+  const newDate = document.getElementById("editDate").value;
+  const newTime = document.getElementById("editTime").value;
+
+  if(!name){ msg.textContent = "Name can't be empty."; return; }
+  if(!phone || phone.replace(/\D/g,"").length < 7){ msg.textContent = "Enter a valid phone number."; return; }
+
+  const original = staffBookingsById[editingBookingId];
+  const movingSlot = newDate !== original.appt_date || newTime !== original.appt_time;
+
+  if(movingSlot){
+    const newKey = slotKey(staffArtistId, newDate, newTime);
+    const stillTaken = takenSlots.has(newKey) && newKey !== slotKey(staffArtistId, original.appt_date, original.appt_time);
+    if(stillTaken){
+      msg.textContent = "That date/time is already booked or blocked — pick another.";
+      return;
+    }
+  }
+
+  const btn = document.getElementById("editSaveBtn");
+  btn.disabled = true; btn.textContent = "Saving…";
+
+  const { error } = await supabaseClient.from("bookings").update({
+    name: name,
+    phone: phone,
+    note: note || null,
+    appt_date: newDate,
+    appt_time: newTime
+  }).eq("id", editingBookingId);
+
+  btn.disabled = false; btn.textContent = "Save Changes";
+
+  if(error){
+    if(error.code === "23505"){
+      msg.textContent = "That date/time was just taken — pick another.";
+    } else {
+      console.error(error);
+      msg.textContent = "Something went wrong saving these changes.";
+    }
+    return;
+  }
+
+  closeEditModal();
+  await renderStaffCalendar();
+  await loadAvailability();
+  renderAll();
+});
+
+document.getElementById("editDeleteBtn").addEventListener("click", async () => {
+  if(!editingBookingId) return;
+  if(!confirm("Cancel this customer's booking entirely?")) return;
+
+  const btn = document.getElementById("editDeleteBtn");
+  btn.disabled = true; btn.textContent = "Cancelling…";
+
+  const { error } = await supabaseClient.from("bookings").delete().eq("id", editingBookingId);
+
+  if(error){
+    alert("Something went wrong: " + error.message);
+    btn.disabled = false; btn.textContent = "Cancel Booking";
+    return;
+  }
+
+  closeEditModal();
+  await renderStaffCalendar();
+  await loadAvailability();
+  renderAll();
+});
+
 </script>
 
 </body>
