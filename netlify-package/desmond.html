@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Desmond Cole — Elevated Ink Tattoo Co.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#17130e;
+    --paper-alt:#221c14;
+    --ink:#ece0c3;
+    --ink-soft:#b9ab8c;
+    --red:#c14a3a;
+    --red-bright:#d65b46;
+    --teal:#4a9184;
+    --gold:#d4a94f;
+    --line:#443a2c;
+    --max:1180px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background-color:var(--paper); color:var(--ink); font-family:'Libre Franklin',sans-serif; font-size:16px; line-height:1.6;
+    background-image:url('logo-watermark.png');
+    background-repeat:no-repeat;
+    background-position:center center;
+    background-attachment:fixed;
+    background-size:min(85vw, 1000px) auto;
+  }
+  a{color:inherit;}
+  img{max-width:100%; display:block;}
+  .wrap{max-width:var(--max); margin:0 auto; padding:0 28px;}
+  h1,h2,h3{margin:0; font-family:'Alfa Slab One',serif; font-weight:400; line-height:1.08;}
+  h2{font-size:clamp(26px,3.4vw,36px);}
+
+  header{position:sticky; top:0; z-index:50; background:var(--paper); border-bottom:3px solid var(--ink);}
+  nav.wrap{display:flex; align-items:center; justify-content:space-between; height:76px; position:relative;}
+  .brand{font-family:'Alfa Slab One',serif; font-size:22px; color:var(--ink); text-decoration:none; display:flex; align-items:center;}
+  .brand-logo{height:46px; width:auto; display:block;}
+  .navlinks{display:flex; gap:32px; list-style:none; margin:0; padding:0;}
+  .navlinks a{text-decoration:none; font-weight:600; font-size:14px; color:var(--ink-soft); transition:color .2s; padding-bottom:4px; border-bottom:2px solid transparent;}
+  .navlinks a:hover{color:var(--ink); border-color:var(--red);}
+  .navcta{font-weight:700; font-size:14px; background:var(--ink); color:var(--paper); padding:11px 20px; border:2px solid var(--ink); text-decoration:none; transition:all .2s;}
+  .navcta:hover{background:var(--red); border-color:var(--red); color:var(--ink);}
+  .navtoggle{display:none; background:none; border:none; color:var(--ink); font-size:26px; cursor:pointer;}
+  .navlinks.open{
+    display:flex !important; position:absolute; top:76px; left:0; right:0;
+    flex-direction:column; gap:0; background:var(--paper); border-bottom:3px solid var(--ink);
+    padding:6px 28px 18px; z-index:60;
+  }
+  .navlinks.open a{padding:13px 0; border-bottom:1px solid var(--line);}
+
+  /* ---------- ARTIST HEADER ---------- */
+  .artist-hero{padding:70px 0 64px; border-bottom:3px solid var(--ink);}
+  .artist-hero-inner{display:flex; gap:36px; align-items:center; flex-wrap:wrap;}
+  .artist-avatar{
+    width:120px; height:120px; border-radius:50%; flex-shrink:0;
+    background:var(--ink); color:var(--paper);
+    display:flex; align-items:center; justify-content:center; font-family:'Alfa Slab One',serif; font-size:46px;
+  }
+  .artist-hero h1{font-size:clamp(32px,4.6vw,48px); margin-bottom:8px;}
+  .artist-role{font-weight:600; font-size:14px; color:var(--red); display:block; margin-bottom:18px;}
+  .social-row{display:flex; gap:12px; flex-wrap:wrap;}
+  .social-link{
+    display:inline-flex; align-items:center; gap:8px; font-weight:600; font-size:13px; color:var(--ink-soft);
+    text-decoration:none; border:2px solid var(--ink); padding:8px 14px; transition:all .2s;
+  }
+  .social-link svg{width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:1.8;}
+  .social-link:hover{background:var(--ink); color:var(--paper);}
+
+  /* ---------- SECTION GENERIC ---------- */
+  section{padding:70px 0; border-bottom:3px solid var(--ink);}
+  section:last-of-type{border-bottom:none;}
+  .sec-head{margin-bottom:38px; max-width:560px;}
+  .sec-head h2{margin-bottom:8px;}
+  .sec-head p{color:var(--ink-soft); font-size:15px; margin:0;}
+
+  .bio-copy{max-width:640px;}
+  .bio-copy p{color:var(--ink-soft); margin-bottom:16px; font-size:15.5px;}
+
+  .btn{font-weight:700; font-size:14px; padding:15px 28px; text-decoration:none; display:inline-block; transition:all .2s; cursor:pointer; border:2px solid var(--ink);}
+  .btn-primary{background:var(--ink); border-color:var(--ink); color:var(--paper);}
+  .btn-primary:hover{background:var(--red); border-color:var(--red); color:var(--ink);}
+
+  /* ---------- PORTFOLIO ---------- */
+  .gallery-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
+  .gcard{position:relative; border:2px solid var(--ink); background:#ece0c3; aspect-ratio:3/4; overflow:hidden;}
+  .gcard svg{width:100%; height:100%; display:block;}
+  .gcard .tag{
+    position:absolute; bottom:0; left:0; right:0; padding:10px 12px;
+    background:rgba(23,19,14,0.88); font-size:11.5px; color:#ece0c3; display:flex; justify-content:space-between;
+  }
+  .gcard .tag b{color:var(--gold); font-weight:700;}
+
+  footer{padding:44px 0;}
+  .foot-inner{display:flex; justify-content:space-between; flex-wrap:wrap; gap:20px; align-items:center;}
+  .foot-meta{font-size:12.5px; color:var(--ink-soft); display:flex; gap:22px; flex-wrap:wrap;}
+
+  @media(max-width:920px){
+    .navlinks{display:none;}
+    .navtoggle{display:block;}
+    .gallery-grid{grid-template-columns:repeat(2,1fr);}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="wrap">
+    <a href="index.html#top" class="brand"><img src="logo.png" alt="Elevated Ink" class="brand-logo"></a>
+    <ul class="navlinks">
+      <li><a href="index.html#about">All Artists</a></li>
+      <li><a href="index.html#gallery">Gallery</a></li>
+      <li><a href="index.html#faq">FAQ</a></li>
+    </ul>
+    <a href="https://instagram.com/desmond.traditional" class="navcta" target="_blank" rel="noopener">Message Desmond</a>
+    <button class="navtoggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">☰</button>
+  </nav>
+</header>
+
+<section class="artist-hero">
+  <div class="wrap artist-hero-inner">
+    <div class="artist-avatar">D</div>
+    <div>
+      <h1>Desmond Cole</h1>
+      <span class="artist-role">American Traditional &amp; Color Realism — 12 years</span>
+      <div class="social-row">
+        <a href="https://instagram.com/desmond.traditional" class="social-link" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.3" cy="6.7" r="1.1" fill="currentColor" stroke="none"/></svg>
+          @desmond.traditional
+        </a>
+        <a href="https://www.tiktok.com/@desmond.traditional" class="social-link" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><path d="M14 4v10.5a3.5 3.5 0 1 1-2.6-3.39"/><path d="M14 4c.5 2.4 2.3 4.2 4.7 4.5"/></svg>
+          @desmond.traditional
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="bio">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Flash on the wall, ink that holds for decades</h2>
+      <p>Traditional bones, color realism layered on top.</p>
+    </div>
+    <div class="bio-copy">
+      <p>Desmond apprenticed in a street shop that did nothing but traditional flash for six years before he ever took a custom request. That flash-first training still shows in the sheets he hand-draws and pins up behind the front desk every few weeks &mdash; a rotating set anyone can walk in and pick straight off the wall.</p>
+      <p>He started layering in color realism about five years ago, and now splits his week between bold traditional linework and portrait-style color pieces, though he'll tell you the traditional work is what keeps his hand honest.</p>
+      <p>If you want something that reads clearly from across a room and still looks sharp in twenty years, he's the one to see &mdash; he won't talk you out of a design, but he will tell you straight if the size or placement won't hold up.</p>
+    </div>
+    <a href="https://instagram.com/desmond.traditional" class="btn btn-primary" target="_blank" rel="noopener">Message Desmond on Instagram to Book</a>
+  </div>
+</section>
+
+<section id="portfolio">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Recent pieces by Desmond</h2>
+      <p>A sample of flash and color realism from the wall and the chair.</p>
+    </div>
+    <div class="gallery-grid" id="portfolioGrid"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-inner">
+    <a href="index.html#top" class="brand"><img src="logo.png" alt="Elevated Ink" class="brand-logo"></a>
+    <div class="foot-meta">
+      <span>118 Foundry Row, Martinsburg, WV</span>
+      <span>Tue–Sat, 11am–7pm</span>
+      <span>(304) 555-0148</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+const navToggle = document.getElementById("navToggle");
+const navLinksEl = document.querySelector(".navlinks");
+if(navToggle && navLinksEl){
+  navToggle.addEventListener("click", () => {
+    const open = navLinksEl.classList.toggle("open");
+    navToggle.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  navLinksEl.querySelectorAll("a").forEach(a => a.addEventListener("click", () => {
+    navLinksEl.classList.remove("open");
+    navToggle.setAttribute("aria-expanded", "false");
+  }));
+}
+
+function svgWrap(inner, accent){
+  return `<svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">
+    <rect width="300" height="400" fill="#ece0c3"/>
+    <g stroke="${accent}" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round">${inner}</g>
+  </svg>`;
+}
+function svgSwallow(){return svgWrap(`<path d="M70 200 C100 160 140 170 150 200 C160 170 200 160 230 200 C210 230 180 220 150 240 C120 220 90 230 70 200 Z"/><path d="M150 200 L150 240"/><path d="M120 250 L150 280 L180 250"/>`,"#221c14");}
+function svgRose(){return svgWrap(`<circle cx="150" cy="170" r="16"/><circle cx="150" cy="170" r="34"/><circle cx="150" cy="170" r="52"/><path d="M150 222 L150 320"/><path d="M150 250 C120 250 110 230 120 215 M150 270 C180 270 190 250 180 235"/><path d="M115 130 L100 110 M185 130 L200 110"/>`,"#c14a3a");}
+function svgDagger(){return svgWrap(`<path d="M150 50 L150 250"/><path d="M120 80 L180 80"/><path d="M135 250 L165 250 L150 290 Z"/><path d="M150 250 L150 90"/><path d="M90 200 C120 190 180 190 210 200 C190 230 110 230 90 200 Z"/><text x="150" y="215" font-family="JetBrains Mono" font-size="13" fill="#221c14" text-anchor="middle">HOLD FAST</text>`,"#d4a94f");}
+
+const PORTFOLIO = [
+  { title: "Traditional swallow pair", svg: svgSwallow() },
+  { title: "Color realism rose", svg: svgRose() },
+  { title: "Banner &amp; dagger", svg: svgDagger() }
+];
+
+const grid = document.getElementById("portfolioGrid");
+PORTFOLIO.forEach(p => {
+  const card = document.createElement("div");
+  card.className = "gcard";
+  card.innerHTML = p.svg + `<div class="tag"><span>${p.title}</span></div>`;
+  grid.appendChild(card);
+});
+</script>
+
+</body>
+</html>
