@@ -113,6 +113,8 @@
   .field textarea{resize:vertical; min-height:80px;}
   .empty-note{color:var(--ink-soft); font-size:13px; font-style:italic;}
   .form-msg{font-size:13px; color:var(--red-bright); margin-top:-8px; margin-bottom:16px; min-height:18px;}
+  .remember-row{display:flex; align-items:center; gap:9px; margin-bottom:20px; cursor:pointer; font-size:13px; color:var(--ink-soft); user-select:none;}
+  .remember-row input{width:auto; margin:0; accent-color:var(--red); cursor:pointer;}
 
   .summary-bar{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; border-top:2px solid var(--ink); padding-top:24px; margin-top:8px;}
   .summary-bar .sum-text{font-size:13.5px; color:var(--ink-soft);}
@@ -161,6 +163,7 @@
   .add-appt-form{border:2px solid var(--ink); background:var(--paper); padding:18px;}
   .add-appt-form .form-row{margin-bottom:14px;}
   .add-appt-form .field{margin-bottom:14px;}
+  .day-modal-actions{display:flex; gap:12px; margin-top:20px; flex-wrap:wrap;}
 
   /* ---------- EDIT MODAL ---------- */
   .modal-overlay{display:none; position:fixed; inset:0; z-index:200; background:rgba(10,8,6,0.75); align-items:center; justify-content:center; padding:24px;}
@@ -333,6 +336,10 @@
         </div>
       </div>
       <div class="form-msg" id="staffMsg"></div>
+      <label class="remember-row" for="staffRemember">
+        <input type="checkbox" id="staffRemember">
+        <span>Remember my email on this device</span>
+      </label>
       <button class="btn btn-primary" id="staffLoginBtn" type="button">Sign In</button>
     </div>
 
@@ -355,10 +362,6 @@
       </div>
 
       <div class="cal-grid" id="calGrid"></div>
-
-      <div class="day-panel" id="dayPanel">
-        <p class="empty-note">Click a day on the calendar to view or add appointments.</p>
-      </div>
     </div>
   </div>
 </section>
@@ -401,6 +404,60 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="dayModal">
+  <div class="modal-box">
+    <button class="modal-close" id="dayModalClose" type="button" aria-label="Close">&times;</button>
+    <h3 id="dayModalTitle"></h3>
+
+    <div id="dayModalList"></div>
+
+    <div class="day-modal-actions" id="dayModalActions">
+      <button class="btn btn-ghost" id="showAddApptBtn" type="button">+ Add Appointment</button>
+      <button class="btn btn-ghost" id="showBlockTimeBtn" type="button">+ Block a Time</button>
+    </div>
+
+    <div id="addApptFormWrap" style="display:none; margin-top:20px;">
+      <span class="step-label">New Appointment</span>
+      <div class="field">
+        <label for="addApptTime">Time</label>
+        <select id="addApptTime"></select>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label for="addName">Client Name</label>
+          <input type="text" id="addName" placeholder="Jordan Reyes">
+        </div>
+        <div class="field">
+          <label for="addPhone">Phone</label>
+          <input type="tel" id="addPhone" placeholder="(555) 123-4567">
+        </div>
+      </div>
+      <div class="field">
+        <label for="addNote">Note</label>
+        <textarea id="addNote" placeholder="Placement, size, reference, deposit status…"></textarea>
+      </div>
+      <div class="form-msg" id="addMsg"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" type="button" id="addCancelBtn">Cancel</button>
+        <button class="btn btn-primary" type="button" id="addSaveBtn">Save Appointment</button>
+      </div>
+    </div>
+
+    <div id="blockTimeFormWrap" style="display:none; margin-top:20px;">
+      <span class="step-label">Block a Time</span>
+      <div class="field">
+        <label for="blockTime">Time</label>
+        <select id="blockTime"></select>
+      </div>
+      <div class="form-msg" id="blockMsg"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" type="button" id="blockCancelBtn">Cancel</button>
+        <button class="btn btn-primary" type="button" id="blockSaveBtn">Block This Time</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <footer>
   <div class="wrap foot-inner">
@@ -423,7 +480,32 @@ const ARTISTS = [
   { id:"desmond", name:"Desmond Cole", role:"American Traditional & Color Realism" },
   { id:"yuki",    name:"Yuki Tanaka",  role:"Japanese Irezumi & Illustrative" }
 ];
-const DAILY_TIMES = ["11:00 AM","1:00 PM","3:00 PM","5:00 PM"];
+const STUDIO_OPEN_MIN = 11 * 60;   // 11:00 AM, in minutes since midnight
+const STUDIO_CLOSE_MIN = 19 * 60;  // 7:00 PM
+const SLOT_STEP_MIN = 15;
+
+function minutesToLabel(totalMin){
+  let h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  const ampm = h >= 12 ? "PM" : "AM";
+  let h12 = h % 12; if(h12 === 0) h12 = 12;
+  return `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
+}
+function timeToMinutes(label){
+  const [time, ampm] = label.split(" ");
+  let [h, m] = time.split(":").map(Number);
+  if(ampm === "PM" && h !== 12) h += 12;
+  if(ampm === "AM" && h === 12) h = 0;
+  return h * 60 + m;
+}
+function generateDailyTimes(){
+  const times = [];
+  for(let m = STUDIO_OPEN_MIN; m <= STUDIO_CLOSE_MIN; m += SLOT_STEP_MIN){
+    times.push(minutesToLabel(m));
+  }
+  return times;
+}
+const DAILY_TIMES = generateDailyTimes(); // e.g. "11:00 AM", "11:15 AM", ... "7:00 PM"
 const STUDIO_DAYS = [2,3,4,5,6]; // Tue(2)-Sat(6) open, Sun/Mon closed
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const DOW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
@@ -499,6 +581,13 @@ function fmtDate(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.g
 
 (function init(){
   checkExistingStaffSession();
+
+  // "Remember my email" — only ever stores the email, never the password.
+  const rememberedEmail = localStorage.getItem("elevatedInkStaffEmail");
+  if(rememberedEmail){
+    document.getElementById("staffEmail").value = rememberedEmail;
+    document.getElementById("staffRemember").checked = true;
+  }
 })();
 
 /* =========================================================
@@ -512,8 +601,7 @@ function fmtDate(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.g
 let staffArtistId = null;
 let staffBookingsById = {};
 let calYear, calMonth;          // currently viewed month (calMonth is 0-indexed)
-let selectedDate = null;        // "YYYY-MM-DD" of the day open in the day panel
-let addingSlotTime = null;      // which time slot currently shows the "add appointment" form
+let selectedDate = null;        // "YYYY-MM-DD" of the day currently open in the day modal
 let calBookingsByDate = {};     // { "YYYY-MM-DD": { "11:00 AM": bookingRow, ... } }
 let calBlocksByDate = {};       // { "YYYY-MM-DD": { "11:00 AM": blockRow, ... } }
 
@@ -524,6 +612,12 @@ document.getElementById("staffLoginBtn").addEventListener("click", async () => {
   msg.textContent = "";
 
   if(!email || !password){ msg.textContent = "Enter your email and password."; return; }
+
+  if(document.getElementById("staffRemember").checked){
+    localStorage.setItem("elevatedInkStaffEmail", email);
+  } else {
+    localStorage.removeItem("elevatedInkStaffEmail");
+  }
 
   const btn = document.getElementById("staffLoginBtn");
   btn.disabled = true; btn.textContent = "Signing in…";
@@ -542,7 +636,8 @@ document.getElementById("staffLogoutBtn").addEventListener("click", async () => 
   selectedDate = null;
   document.getElementById("staffDashboard").style.display = "none";
   document.getElementById("staffLoginShell").style.display = "block";
-  document.getElementById("staffEmail").value = "";
+  const rememberedEmail = localStorage.getItem("elevatedInkStaffEmail");
+  document.getElementById("staffEmail").value = rememberedEmail || "";
   document.getElementById("staffPassword").value = "";
   document.getElementById("staffMsg").textContent = "";
 });
@@ -579,7 +674,6 @@ async function loadStaffProfile(){
   await loadMonthData();
   renderCalendarHeader();
   renderCalendarGrid();
-  renderDayPanel();
 }
 
 function monthRange(year, month){
@@ -660,102 +754,123 @@ function renderCalendarGrid(){
     cell.innerHTML = `<span class="cal-daynum">${dayNum}</span><span class="cal-dots">${dots}</span>`;
 
     if(isStudioDay){
-      cell.addEventListener("click", () => {
-        selectedDate = key;
-        addingSlotTime = null;
-        renderCalendarGrid();
-        renderDayPanel();
-      });
+      cell.addEventListener("click", () => openDayModal(key));
     }
     grid.appendChild(cell);
   }
 }
 
-function renderDayPanel(){
-  const panel = document.getElementById("dayPanel");
-  if(!selectedDate){
-    panel.innerHTML = `<p class="empty-note">Click a day on the calendar to view or add appointments.</p>`;
-    return;
+/* ---------- Day modal: view a day's appointments, add a new one, or block a time ---------- */
+const dayModal = document.getElementById("dayModal");
+
+function openDayModal(dateKey){
+  selectedDate = dateKey;
+  renderCalendarGrid();
+  renderDayModal();
+  dayModal.classList.add("open");
+}
+function closeDayModal(){
+  dayModal.classList.remove("open");
+}
+document.getElementById("dayModalClose").addEventListener("click", closeDayModal);
+dayModal.addEventListener("click", (e) => { if(e.target === dayModal) closeDayModal(); });
+
+function populateTimeDropdown(selectId, excludeTaken){
+  const sel = document.getElementById(selectId);
+  sel.innerHTML = "";
+  const bookingsToday = calBookingsByDate[selectedDate] || {};
+  const blocksToday = calBlocksByDate[selectedDate] || {};
+  DAILY_TIMES.forEach(t => {
+    if(excludeTaken && (bookingsToday[t] || blocksToday[t])) return;
+    const opt = document.createElement("option");
+    opt.value = t;
+    opt.textContent = t;
+    sel.appendChild(opt);
+  });
+  if(sel.options.length === 0){
+    const opt = document.createElement("option");
+    opt.textContent = "No open times left that day";
+    opt.disabled = true;
+    sel.appendChild(opt);
   }
+}
+
+function renderDayModal(){
+  if(!selectedDate) return;
 
   const dateObj = new Date(selectedDate + "T00:00:00");
-  const niceDate = dateObj.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+  document.getElementById("dayModalTitle").textContent =
+    dateObj.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+
   const bookingsToday = calBookingsByDate[selectedDate] || {};
   const blocksToday = calBlocksByDate[selectedDate] || {};
 
-  let rows = "";
-  DAILY_TIMES.forEach(t => {
-    const bk = bookingsToday[t];
-    const blk = blocksToday[t];
+  const items = [];
+  Object.keys(bookingsToday).forEach(t => items.push({ time: t, type: "booking", data: bookingsToday[t] }));
+  Object.keys(blocksToday).forEach(t => items.push({ time: t, type: "block", data: blocksToday[t] }));
+  items.sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
 
-    if(bk){
-      const notePreview = bk.note ? " · " + (bk.note.length > 44 ? bk.note.slice(0, 44) + "…" : bk.note) : "";
-      rows += `<div class="staff-slot booked">
-        <span class="lbl" data-action="edit" data-id="${bk.id}" title="Click to edit">${t} — ${bk.name}${notePreview}</span>
-        <button data-action="cancel" data-id="${bk.id}">Cancel</button>
+  const listEl = document.getElementById("dayModalList");
+  if(items.length === 0){
+    listEl.innerHTML = `<p class="empty-note">Nothing booked or blocked yet.</p>`;
+  } else {
+    listEl.innerHTML = items.map(it => {
+      if(it.type === "booking"){
+        const notePreview = it.data.note ? " · " + (it.data.note.length > 44 ? it.data.note.slice(0, 44) + "…" : it.data.note) : "";
+        return `<div class="staff-slot booked">
+          <span class="lbl" data-action="edit" data-id="${it.data.id}" title="Click to edit">${it.time} — ${it.data.name}${notePreview}</span>
+          <button data-action="cancel" data-id="${it.data.id}">Cancel</button>
+        </div>`;
+      }
+      return `<div class="staff-slot blocked">
+        <span class="lbl">${it.time} — Blocked</span>
+        <button data-action="unblock" data-id="${it.data.id}">Unblock</button>
       </div>`;
-    } else if(blk){
-      rows += `<div class="staff-slot blocked">
-        <span class="lbl">${t} — Blocked</span>
-        <button data-action="unblock" data-id="${blk.id}">Unblock</button>
-      </div>`;
-    } else if(addingSlotTime === t){
-      rows += `<div class="staff-slot add-open">
-        <div class="add-appt-form">
-          <span class="step-label">New appointment — ${t}</span>
-          <div class="form-row">
-            <div class="field"><label>Client Name</label><input type="text" id="addName" placeholder="Jordan Reyes"></div>
-            <div class="field"><label>Phone</label><input type="tel" id="addPhone" placeholder="(555) 123-4567"></div>
-          </div>
-          <div class="field"><label>Note</label><textarea id="addNote" placeholder="Placement, size, reference, deposit status…"></textarea></div>
-          <div class="form-msg" id="addMsg"></div>
-          <div class="modal-actions">
-            <button class="btn btn-ghost" type="button" id="addCancelBtn">Cancel</button>
-            <button class="btn btn-primary" type="button" id="addSaveBtn">Save Appointment</button>
-          </div>
-        </div>
-      </div>`;
-    } else {
-      rows += `<div class="staff-slot">
-        <span class="lbl">${t} — Open</span>
-        <span class="row-actions">
-          <button data-action="add" data-time="${t}">Add</button>
-          <button data-action="block" data-time="${t}">Block</button>
-        </span>
-      </div>`;
-    }
-  });
+    }).join("");
+  }
 
-  panel.innerHTML = `<h3 class="day-panel-title">${niceDate}</h3><div class="day-panel-rows">${rows}</div>`;
+  listEl.querySelectorAll("button[data-action]").forEach(btn => btn.addEventListener("click", handleStaffAction));
+  listEl.querySelectorAll("span[data-action='edit']").forEach(span => span.addEventListener("click", () => {
+    closeDayModal();
+    openEditModal(span.dataset.id);
+  }));
 
-  panel.querySelectorAll("button[data-action]").forEach(btn => btn.addEventListener("click", handleStaffAction));
-  panel.querySelectorAll("span[data-action='edit']").forEach(span => span.addEventListener("click", () => openEditModal(span.dataset.id)));
-
-  const saveBtn = document.getElementById("addSaveBtn");
-  const cancelBtn = document.getElementById("addCancelBtn");
-  if(saveBtn) saveBtn.addEventListener("click", submitNewAppointment);
-  if(cancelBtn) cancelBtn.addEventListener("click", () => { addingSlotTime = null; renderDayPanel(); });
+  document.getElementById("addApptFormWrap").style.display = "none";
+  document.getElementById("blockTimeFormWrap").style.display = "none";
+  document.getElementById("dayModalActions").style.display = "flex";
 }
+
+document.getElementById("showAddApptBtn").addEventListener("click", () => {
+  document.getElementById("addMsg").textContent = "";
+  document.getElementById("addName").value = "";
+  document.getElementById("addPhone").value = "";
+  document.getElementById("addNote").value = "";
+  populateTimeDropdown("addApptTime", true);
+  document.getElementById("addApptFormWrap").style.display = "block";
+  document.getElementById("blockTimeFormWrap").style.display = "none";
+  document.getElementById("dayModalActions").style.display = "none";
+});
+document.getElementById("addCancelBtn").addEventListener("click", renderDayModal);
+
+document.getElementById("showBlockTimeBtn").addEventListener("click", () => {
+  document.getElementById("blockMsg").textContent = "";
+  populateTimeDropdown("blockTime", true);
+  document.getElementById("blockTimeFormWrap").style.display = "block";
+  document.getElementById("addApptFormWrap").style.display = "none";
+  document.getElementById("dayModalActions").style.display = "none";
+});
+document.getElementById("blockCancelBtn").addEventListener("click", renderDayModal);
 
 async function handleStaffAction(e){
   const btn = e.currentTarget;
   const action = btn.dataset.action;
 
-  if(action === "add"){
-    addingSlotTime = btn.dataset.time;
-    renderDayPanel();
-    return;
-  }
   if(action === "cancel" && !confirm("Cancel this client's appointment?")) return;
 
   btn.disabled = true;
 
   let error = null;
-  if(action === "block"){
-    ({ error } = await supabaseClient.from("blocked_slots").insert({
-      artist_id: staffArtistId, appt_date: selectedDate, appt_time: btn.dataset.time
-    }));
-  } else if(action === "unblock"){
+  if(action === "unblock"){
     ({ error } = await supabaseClient.from("blocked_slots").delete().eq("id", btn.dataset.id));
   } else if(action === "cancel"){
     ({ error } = await supabaseClient.from("bookings").delete().eq("id", btn.dataset.id));
@@ -765,17 +880,19 @@ async function handleStaffAction(e){
 
   await loadMonthData();
   renderCalendarGrid();
-  renderDayPanel();
+  renderDayModal();
 }
 
-async function submitNewAppointment(){
+document.getElementById("addSaveBtn").addEventListener("click", async () => {
   const msg = document.getElementById("addMsg");
   msg.textContent = "";
 
+  const time = document.getElementById("addApptTime").value;
   const name = document.getElementById("addName").value.trim();
   const phone = document.getElementById("addPhone").value.trim();
   const note = document.getElementById("addNote").value.trim();
 
+  if(!time){ msg.textContent = "Pick a time."; return; }
   if(!name){ msg.textContent = "Client name is required."; return; }
   if(!phone || phone.replace(/\D/g, "").length < 7){ msg.textContent = "Enter a valid phone number."; return; }
 
@@ -786,12 +903,13 @@ async function submitNewAppointment(){
     .from("bookings")
     .insert({
       name, phone, note: note || null,
-      artist_id: staffArtistId, appt_date: selectedDate, appt_time: addingSlotTime
+      artist_id: staffArtistId, appt_date: selectedDate, appt_time: time
     })
     .select();
 
+  btn.disabled = false; btn.textContent = "Save Appointment";
+
   if(error){
-    btn.disabled = false; btn.textContent = "Save Appointment";
     if(error.code === "23505"){
       msg.textContent = "That time was just taken — pick another.";
     } else {
@@ -800,38 +918,65 @@ async function submitNewAppointment(){
     }
     return;
   }
-
   if(!inserted || inserted.length === 0){
-    btn.disabled = false; btn.textContent = "Save Appointment";
     msg.textContent = "Save blocked — the staff INSERT policy may not be applied yet (see artist_scheduler_policies.sql).";
     console.warn("Insert returned 0 rows. Likely missing authenticated INSERT policy on bookings table.");
     return;
   }
 
-  addingSlotTime = null;
   await loadMonthData();
   renderCalendarGrid();
-  renderDayPanel();
-}
+  renderDayModal();
+});
+
+document.getElementById("blockSaveBtn").addEventListener("click", async () => {
+  const msg = document.getElementById("blockMsg");
+  msg.textContent = "";
+
+  const time = document.getElementById("blockTime").value;
+  if(!time){ msg.textContent = "Pick a time."; return; }
+
+  const btn = document.getElementById("blockSaveBtn");
+  btn.disabled = true; btn.textContent = "Blocking…";
+
+  const { error } = await supabaseClient.from("blocked_slots").insert({
+    artist_id: staffArtistId, appt_date: selectedDate, appt_time: time
+  });
+
+  btn.disabled = false; btn.textContent = "Block This Time";
+
+  if(error){
+    console.error("Block error:", error);
+    msg.textContent = "Error: " + (error.message || "Something went wrong.");
+    return;
+  }
+
+  await loadMonthData();
+  renderCalendarGrid();
+  renderDayModal();
+});
 
 document.getElementById("calPrevBtn").addEventListener("click", async () => {
   calMonth--; if(calMonth < 0){ calMonth = 11; calYear--; }
-  selectedDate = null; addingSlotTime = null;
+  selectedDate = null;
+  closeDayModal();
   await loadMonthData();
-  renderCalendarHeader(); renderCalendarGrid(); renderDayPanel();
+  renderCalendarHeader(); renderCalendarGrid();
 });
 document.getElementById("calNextBtn").addEventListener("click", async () => {
   calMonth++; if(calMonth > 11){ calMonth = 0; calYear++; }
-  selectedDate = null; addingSlotTime = null;
+  selectedDate = null;
+  closeDayModal();
   await loadMonthData();
-  renderCalendarHeader(); renderCalendarGrid(); renderDayPanel();
+  renderCalendarHeader(); renderCalendarGrid();
 });
 document.getElementById("calTodayBtn").addEventListener("click", async () => {
   const now = new Date();
   calYear = now.getFullYear(); calMonth = now.getMonth();
-  selectedDate = fmtDate(now); addingSlotTime = null;
+  closeDayModal();
   await loadMonthData();
-  renderCalendarHeader(); renderCalendarGrid(); renderDayPanel();
+  renderCalendarHeader();
+  renderCalendarGrid();
 });
 
 /* =========================================================
@@ -939,7 +1084,6 @@ document.getElementById("editSaveBtn").addEventListener("click", async () => {
   closeEditModal();
   await loadMonthData();
   renderCalendarGrid();
-  renderDayPanel();
 });
 
 document.getElementById("editDeleteBtn").addEventListener("click", async () => {
@@ -972,7 +1116,6 @@ document.getElementById("editDeleteBtn").addEventListener("click", async () => {
   closeEditModal();
   await loadMonthData();
   renderCalendarGrid();
-  renderDayPanel();
 });
 
 </script>
