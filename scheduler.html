@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Elevated Ink Tattoo Co.</title>
+<meta name="robots" content="noindex, nofollow">
+<title>Artist Scheduler — Elevated Ink</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -15,6 +16,7 @@
     --ink-soft:#b9ab8c;
     --red:#c14a3a;
     --red-bright:#d65b46;
+    --green:#2f7d55;
     --teal:#4a9184;
     --gold:#d4a94f;
     --line:#443a2c;
@@ -75,12 +77,29 @@
   .sec-head h2{margin-bottom:10px;}
   .sec-head p{color:var(--ink-soft); font-size:15.5px; margin:0;}
 
+  /* ---------- TEAM PHOTO + SHOP SOCIALS ---------- */
+  .team-photo-frame{
+    width:100%; aspect-ratio:16/7; border:2px solid var(--ink); background:var(--paper-alt);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+    margin-bottom:22px; color:var(--ink-soft); box-sizing:border-box;
+  }
+  .team-photo-frame svg{width:46px; height:46px; stroke:var(--ink-soft); fill:none; stroke-width:1.4;}
+  .team-photo-frame span{font-size:13px; font-weight:600; letter-spacing:0.02em;}
+  img.team-photo-frame{object-fit:cover; border:2px solid var(--ink);}
+  .social-row{display:flex; gap:12px; flex-wrap:wrap;}
+  .social-link{
+    display:inline-flex; align-items:center; gap:8px; font-weight:600; font-size:13px; color:var(--ink-soft);
+    text-decoration:none; border:2px solid var(--ink); padding:8px 14px; transition:all .2s;
+  }
+  .social-link svg{width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:1.8;}
+  .social-link:hover{background:var(--ink); color:var(--paper);}
+
   /* ---------- ARTISTS ---------- */
   .artist-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:24px;}
   .artist-card{border:2px solid var(--ink); background:var(--paper-alt); padding:28px 24px;}
   .artist-photo{
     width:64px; height:64px; border-radius:50%; background:var(--ink); color:var(--paper);
-    display:flex; align-items:center; justify-content:center; font-family:'Alfa Slab One',serif; font-size:24px; margin-bottom:16px;
+    display:flex; align-items:center; justify-content:center; font-family:'Alfa Slab One',serif; font-size:19px; margin-bottom:16px;
   }
   .artist-card .role{display:block; font-weight:600; font-size:12.5px; letter-spacing:0.02em; text-transform:uppercase; color:var(--red); margin-bottom:10px;}
   .artist-card p{color:var(--ink-soft); font-size:14.5px; margin:0 0 14px;}
@@ -127,31 +146,36 @@
   .cal-month-label{font-family:'Alfa Slab One',serif; font-size:20px; min-width:190px;}
   .cal-today-btn{margin-left:auto; padding:10px 18px; font-size:12.5px;}
 
-  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:2px; margin-bottom:32px; background:var(--line);}
-  .cal-weekday{background:var(--paper-alt); text-align:center; padding:8px 4px; font-size:11px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:var(--ink-soft);}
-  .cal-day{background:var(--paper-alt); min-height:88px; padding:8px; cursor:pointer; display:flex; flex-direction:column; justify-content:space-between; transition:background .15s;}
-  .cal-day:hover{background:var(--ink);}
-  .cal-day:hover .cal-daynum{color:var(--paper);}
-  .cal-day.pad{cursor:default; background:transparent;}
-  .cal-day.pad:hover{background:transparent;}
-  .cal-day.closed{cursor:default; opacity:0.35;}
-  .cal-day.closed:hover{background:var(--paper-alt);}
-  .cal-day.closed:hover .cal-daynum{color:var(--ink);}
+  .cal-grid{
+    display:grid; grid-template-columns:repeat(7,1fr); gap:1px; margin-bottom:20px;
+    background:#e3ddcd; border:3px solid var(--ink); box-shadow:0 6px 22px rgba(0,0,0,0.3);
+  }
+  .cal-weekday{background:#f5f2ea; text-align:center; padding:9px 4px; font-size:11px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:#7a6f5c;}
+  .cal-day{background:#ffffff; min-height:118px; padding:8px; cursor:pointer; display:flex; flex-direction:column; gap:4px; transition:background .15s;}
+  .cal-day:hover{background:#f7f4ec;}
+  .cal-day.pad{cursor:default; background:#f5f2ea;}
+  .cal-day.pad:hover{background:#f5f2ea;}
+  .cal-day.closed{cursor:default; background:#f5f2ea; opacity:0.55;}
+  .cal-day.closed:hover{background:#f5f2ea;}
   .cal-day.today{box-shadow:inset 0 0 0 2px var(--gold);}
-  .cal-day.selected{background:var(--ink);}
-  .cal-day.selected .cal-daynum{color:var(--paper);}
-  .cal-daynum{font-weight:700; font-size:14px;}
-  .cal-dots{display:flex; gap:4px;}
-  .dot{width:7px; height:7px; border-radius:50%; display:inline-block;}
-  .dot-booked{background:var(--red);}
-  .dot-blocked{background:var(--gold);}
-  .cal-legend{display:flex; gap:20px; margin:-16px 0 28px; font-size:12px; color:var(--ink-soft); flex-wrap:wrap;}
+  .cal-day.selected{box-shadow:inset 0 0 0 2px var(--red); background:#fdf4f2;}
+  .cal-daynum{font-weight:700; font-size:13px; color:#221c14;}
+  .cal-day-events{display:flex; flex-direction:column; gap:3px; overflow:hidden;}
+  .cal-event-line{
+    font-size:10.5px; font-weight:600; padding:2px 6px; border-left:3px solid var(--green);
+    background:#e8f5ec; color:#221c14; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .cal-event-line.blocked{border-left-color:var(--red); background:#fdeceb; color:#7a6f5c;}
+  .cal-more{font-size:10px; font-weight:700; color:#7a6f5c; padding-left:6px;}
+  .cal-legend{display:flex; gap:20px; margin:-8px 0 24px; font-size:12px; color:var(--ink-soft); flex-wrap:wrap;}
   .cal-legend span{display:inline-flex; align-items:center; gap:6px;}
 
   .day-panel-title{font-size:18px; margin-bottom:16px;}
   .day-panel-rows{display:flex; flex-direction:column; gap:2px;}
-  .staff-slot{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 2px; border-top:1px solid var(--line); font-size:13px;}
+  .staff-slot{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 10px; border-top:1px solid var(--line); font-size:13px;}
   .staff-slot:first-of-type{border-top:none;}
+  .staff-slot.booked{border-left:3px solid var(--green);}
+  .staff-slot.blocked{border-left:3px solid var(--red);}
   .staff-slot .lbl{color:var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .staff-slot.booked .lbl{color:var(--ink); cursor:pointer;}
   .staff-slot.booked .lbl:hover{color:var(--red); text-decoration:underline;}
@@ -179,6 +203,36 @@
   .btn-danger{background:transparent; border:2px solid var(--red); color:var(--red);}
   .btn-danger:hover{background:var(--red); color:var(--ink);}
 
+  /* ---------- SCHEDULER POPUPS (day modal + edit modal) — white, to match the calendar ---------- */
+  .scheduler-modal .modal-box{background:#ffffff; border-color:#221c14; color:#221c14;}
+  .scheduler-modal .modal-box h3{color:#221c14;}
+  .scheduler-modal .modal-sub{color:#7a6f5c;}
+  .scheduler-modal .step-label{color:var(--red);}
+  .scheduler-modal .modal-close{color:#7a6f5c;}
+  .scheduler-modal .modal-close:hover{color:var(--red);}
+  .scheduler-modal .field label{color:#7a6f5c;}
+  .scheduler-modal .field input,
+  .scheduler-modal .field textarea,
+  .scheduler-modal .field select{background:#f7f5f0; border-color:#221c14; color:#221c14;}
+  .scheduler-modal .field input:focus,
+  .scheduler-modal .field textarea:focus,
+  .scheduler-modal .field select:focus{border-color:var(--red);}
+  .scheduler-modal .btn-primary{background:#221c14; border-color:#221c14; color:#ffffff;}
+  .scheduler-modal .btn-primary:hover{background:var(--red); border-color:var(--red); color:#ffffff;}
+  .scheduler-modal .btn-ghost{color:#221c14; border-color:#221c14;}
+  .scheduler-modal .btn-ghost:hover{background:#221c14; color:#ffffff;}
+  .scheduler-modal .btn-danger{color:var(--red); border-color:var(--red);}
+  .scheduler-modal .btn-danger:hover{background:var(--red); color:#ffffff;}
+  .scheduler-modal .empty-note{color:#7a6f5c;}
+  .scheduler-modal .form-msg, .scheduler-modal .modal-msg{color:#c0392b;}
+  .scheduler-modal .staff-slot{border-top-color:#e3ddcd;}
+  .scheduler-modal .staff-slot .lbl{color:#4a4238;}
+  .scheduler-modal .staff-slot.booked .lbl{color:#221c14; cursor:pointer;}
+  .scheduler-modal .staff-slot.booked .lbl:hover{color:var(--red);}
+  .scheduler-modal .staff-slot.blocked .lbl{color:var(--red);}
+  .scheduler-modal .staff-slot button{background:#f7f5f0; border-color:#221c14; color:#221c14;}
+  .scheduler-modal .staff-slot button:hover{background:#221c14; color:#ffffff;}
+
   /* ---------- FAQ ---------- */
   .faq-list{display:flex; flex-direction:column; gap:2px; max-width:760px;}
   .faq-item{border:2px solid var(--ink); background:var(--paper-alt);}
@@ -203,118 +257,57 @@
     .gallery-grid{grid-template-columns:repeat(2,1fr);}
     .form-row{grid-template-columns:1fr;}
     .booking-shell{padding:22px;}
-    .cal-day{min-height:64px; padding:6px;}
+    .cal-day{min-height:82px; padding:5px;}
+    .cal-event-line{font-size:9px; padding:1px 4px;}
     .cal-month-label{font-size:17px; min-width:0;}
   }
+
+  @media(max-width:600px){
+    .wrap{padding:0 18px;}
+    .hero{padding:52px 0 46px;}
+    .hero-logo{max-width:220px; margin-bottom:20px;}
+    .hero h1{font-size:clamp(30px,8vw,40px);}
+    .hero p.lede{font-size:16px;}
+    .hero-ctas{gap:12px;}
+    .btn{padding:13px 20px; font-size:13px;}
+    section{padding:48px 0;}
+    .sec-head{margin-bottom:30px;}
+    .team-photo-frame{aspect-ratio:4/3; margin-bottom:18px;}
+    .team-photo-frame svg{width:36px; height:36px;}
+    .social-link{font-size:12px; padding:7px 12px;}
+    .artist-card{padding:22px 18px;}
+    .gallery-grid{grid-template-columns:repeat(2,1fr); gap:12px;}
+    .gtab{padding:8px 13px; font-size:12px;}
+    .booking-shell{padding:16px;}
+    .cal-grid{gap:1px;}
+    .cal-day{min-height:58px; padding:3px;}
+    .cal-daynum{font-size:11px;}
+    .cal-weekday{font-size:9px; padding:6px 2px;}
+    .cal-event-line{font-size:8px; padding:1px 3px;}
+    .cal-more{font-size:8px;}
+    .cal-month-label{font-size:15px;}
+    .cal-nav-btn{width:34px; height:34px; font-size:14px;}
+    .cal-today-btn{padding:8px 12px; font-size:11.5px;}
+    .cal-legend{font-size:10.5px; gap:12px;}
+    .modal-box{padding:20px;}
+    .modal-box h3{font-size:18px;}
+    .day-modal-actions{gap:8px;}
+    .day-modal-actions .btn{flex:1 1 auto; text-align:center; padding:12px 10px; font-size:12.5px;}
+    .foot-inner{flex-direction:column; align-items:flex-start;}
+    .foot-meta{gap:10px 18px;}
+  }
+  .back-link{font-weight:600; font-size:13px; color:var(--ink-soft); text-decoration:none; border-bottom:1px solid var(--line);}
+  .back-link:hover{color:var(--ink); border-color:var(--ink);}
 </style>
 </head>
 <body>
 
-<header>
-  <nav class="wrap">
+<header id="top">
+  <nav class="wrap" style="justify-content:space-between;">
     <a href="#top" class="brand"><img src="logo.png" alt="Elevated Ink" class="brand-logo"></a>
-    <ul class="navlinks">
-      <li><a href="#about">Artists</a></li>
-      <li><a href="#gallery">Gallery</a></li>
-      <li><a href="#faq">FAQ</a></li>
-    </ul>
-    <a href="#about" class="navcta">Meet the Artists</a>
-    <button class="navtoggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">☰</button>
+    <a href="index.html" class="back-link">&larr; Back to site</a>
   </nav>
 </header>
-
-<section class="hero" id="top">
-  <div class="wrap hero-inner">
-    <img src="logo.png" alt="Elevated Ink Tattoo Co." class="hero-logo">
-    <h1>Tattoos built to last, not trends.</h1>
-    <p class="lede">Three resident artists, one chair at a time. Custom work only — no flash off the wall, no rushing the line.</p>
-    <div class="hero-ctas">
-      <a href="#about" class="btn btn-primary">Meet the Artists</a>
-      <a href="#gallery" class="btn btn-ghost">View Gallery</a>
-    </div>
-  </div>
-</section>
-
-<section id="about">
-  <div class="wrap">
-    <div class="sec-head">
-      <h2>Meet the Artists</h2>
-      <p>A small studio in a converted print shop. Appointment only, 12,000+ sessions completed since 2014.</p>
-    </div>
-    <div class="artist-grid">
-      <div class="artist-card">
-        <div class="artist-photo">M</div>
-        <h3>Mara Voss</h3>
-        <span class="role">Blackwork &amp; Fine Line — 8 yrs</span>
-        <p>Trained under a single-needle specialist in Antwerp. Known for botanical linework and a sharp eye for negative space.</p>
-        <a href="mara.html" class="artist-link">Full profile &amp; portfolio &rarr;</a>
-      </div>
-      <div class="artist-card">
-        <div class="artist-photo">D</div>
-        <h3>Desmond Cole</h3>
-        <span class="role">American Traditional &amp; Color Realism — 12 yrs</span>
-        <p>Six years in a street shop doing traditional flash before layering in color realism. Hand-draws every sheet on the wall.</p>
-        <a href="desmond.html" class="artist-link">Full profile &amp; portfolio &rarr;</a>
-      </div>
-      <div class="artist-card">
-        <div class="artist-photo">Y</div>
-        <h3>Yuki Tanaka</h3>
-        <span class="role">Japanese Irezumi &amp; Illustrative — 10 yrs</span>
-        <p>Studied traditional irezumi composition in Osaka. Books large-scale back pieces in multi-session arcs.</p>
-        <a href="yuki.html" class="artist-link">Full profile &amp; portfolio &rarr;</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="gallery">
-  <div class="wrap">
-    <div class="sec-head">
-      <h2>Gallery</h2>
-      <p>A sample of finished pieces. Filter by artist to see their specific hand.</p>
-    </div>
-
-    <div class="gallery-tabs" id="galleryTabs">
-      <button class="gtab active" data-filter="all">All Work</button>
-      <button class="gtab" data-filter="mara">Mara</button>
-      <button class="gtab" data-filter="desmond">Desmond</button>
-      <button class="gtab" data-filter="yuki">Yuki</button>
-    </div>
-
-    <div class="gallery-grid" id="galleryGrid"></div>
-  </div>
-</section>
-
-<section id="faq">
-  <div class="wrap">
-    <div class="sec-head">
-      <h2>Good to Know</h2>
-      <p>The practical stuff, answered up front.</p>
-    </div>
-    <div class="faq-list">
-      <details class="faq-item">
-        <summary>How do I actually book a session?</summary>
-        <p>We don't run an online booking form. Head to the artist's profile page and message them directly on Instagram with your idea, placement, and size — they'll work out a time with you from there.</p>
-      </details>
-      <details class="faq-item">
-        <summary>Do you take walk-ins?</summary>
-        <p>When an artist has an open slot, yes — but most custom work is booked ahead of time directly with the artist rather than same-day.</p>
-      </details>
-      <details class="faq-item">
-        <summary>Is there a deposit?</summary>
-        <p>Yes — a $50 deposit holds your appointment and comes off the final price. It's non-refundable if you no-show or cancel with less than 48 hours' notice.</p>
-      </details>
-      <details class="faq-item">
-        <summary>What's the age requirement?</summary>
-        <p>18 and up, valid photo ID required. We don't tattoo minors, even with parental consent.</p>
-      </details>
-      <details class="faq-item">
-        <summary>How should I prep for my appointment?</summary>
-        <p>Sleep well, eat beforehand, stay hydrated, and skip the alcohol for 24 hours. Wear something that gives easy access to the area being worked on.</p>
-      </details>
-    </div>
-  </div>
-</section>
 
 <section id="staff">
   <div class="wrap">
@@ -356,9 +349,9 @@
         <button class="btn btn-ghost cal-today-btn" id="calTodayBtn" type="button">Today</button>
       </div>
       <div class="cal-legend">
-        <span><span class="dot dot-booked"></span> has appointments</span>
-        <span><span class="dot dot-blocked"></span> has blocked time</span>
-        <span style="box-shadow:inset 0 0 0 2px var(--gold); width:10px; height:10px; display:inline-block;"></span> today
+        <span><span style="width:10px; height:10px; border-left:3px solid var(--green); background:#e8f5ec; display:inline-block;"></span> booked</span>
+        <span><span style="width:10px; height:10px; border-left:3px solid var(--red); background:#fdeceb; display:inline-block;"></span> blocked</span>
+        <span><span style="box-shadow:inset 0 0 0 2px var(--gold); width:10px; height:10px; display:inline-block;"></span> today</span>
       </div>
 
       <div class="cal-grid" id="calGrid"></div>
@@ -366,7 +359,7 @@
   </div>
 </section>
 
-<div class="modal-overlay" id="editModal">
+<div class="modal-overlay scheduler-modal" id="editModal">
   <div class="modal-box">
     <button class="modal-close" id="editModalClose" type="button" aria-label="Close">&times;</button>
     <h3>Edit Appointment</h3>
@@ -376,19 +369,23 @@
       <label for="editName">Full Name</label>
       <input type="text" id="editName" autocomplete="off">
     </div>
-    <div class="form-row">
-      <div class="field">
-        <label for="editPhone">Phone Number</label>
-        <input type="tel" id="editPhone" autocomplete="off">
-      </div>
-      <div class="field">
-        <label for="editTime">Time</label>
-        <select id="editTime"></select>
-      </div>
+    <div class="field">
+      <label for="editPhone">Phone Number</label>
+      <input type="tel" id="editPhone" autocomplete="off">
     </div>
     <div class="field">
       <label for="editDate">Date</label>
       <input type="date" id="editDate">
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label for="editStartTime">Start Time</label>
+        <select id="editStartTime"></select>
+      </div>
+      <div class="field">
+        <label for="editEndTime">End Time</label>
+        <select id="editEndTime"></select>
+      </div>
     </div>
     <div class="field" style="margin-bottom:10px;">
       <label for="editNote">Tattoo Idea / Notes</label>
@@ -404,7 +401,7 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="dayModal">
+<div class="modal-overlay scheduler-modal" id="dayModal">
   <div class="modal-box">
     <button class="modal-close" id="dayModalClose" type="button" aria-label="Close">&times;</button>
     <h3 id="dayModalTitle"></h3>
@@ -418,9 +415,15 @@
 
     <div id="addApptFormWrap" style="display:none; margin-top:20px;">
       <span class="step-label">New Appointment</span>
-      <div class="field">
-        <label for="addApptTime">Time</label>
-        <select id="addApptTime"></select>
+      <div class="form-row">
+        <div class="field">
+          <label for="addStartTime">Start Time</label>
+          <select id="addStartTime"></select>
+        </div>
+        <div class="field">
+          <label for="addEndTime">End Time</label>
+          <select id="addEndTime"></select>
+        </div>
       </div>
       <div class="form-row">
         <div class="field">
@@ -445,40 +448,44 @@
 
     <div id="blockTimeFormWrap" style="display:none; margin-top:20px;">
       <span class="step-label">Block a Time</span>
-      <div class="field">
-        <label for="blockTime">Time</label>
-        <select id="blockTime"></select>
+      <div class="form-row">
+        <div class="field">
+          <label for="blockStartTime">Start Time</label>
+          <select id="blockStartTime"></select>
+        </div>
+        <div class="field">
+          <label for="blockEndTime">End Time</label>
+          <select id="blockEndTime"></select>
+        </div>
       </div>
       <div class="form-msg" id="blockMsg"></div>
       <div class="modal-actions">
         <button class="btn btn-ghost" type="button" id="blockCancelBtn">Cancel</button>
-        <button class="btn btn-primary" type="button" id="blockSaveBtn">Block This Time</button>
+        <button class="btn btn-primary" type="button" id="blockSaveBtn">Block This Range</button>
       </div>
     </div>
   </div>
 </div>
 
-
 <footer>
   <div class="wrap foot-inner">
     <a href="#top" class="brand"><img src="logo.png" alt="Elevated Ink" class="brand-logo"></a>
     <div class="foot-meta">
-      <span>118 Foundry Row, Martinsburg, WV</span>
-      <span>Tue–Sat, 11am–7pm</span>
-      <span>(304) 555-0148</span>
-      <a href="#staff">Staff Login</a>
+      <span>183 Monroe St. Martinsburg, WV 25404</span>
+      <span>(681) 575-0008</span>
+      <a href="mailto:elevatedink2025@gmail.com">elevatedink2025@gmail.com</a>
     </div>
   </div>
 </footer>
 
 <script>
-/* =========================================================
-   DATA: artists, gallery, scheduling
-   ========================================================= */
 const ARTISTS = [
-  { id:"mara",    name:"Mara Voss",    role:"Blackwork & Fine Line" },
-  { id:"desmond", name:"Desmond Cole", role:"American Traditional & Color Realism" },
-  { id:"yuki",    name:"Yuki Tanaka",  role:"Japanese Irezumi & Illustrative" }
+  { id:"tj",      name:"TJ" },
+  { id:"austin",  name:"Austin" },
+  { id:"ariana",  name:"Ariana" },
+  { id:"makenzi", name:"Makenzi" },
+  { id:"aaron",   name:"Aaron" },
+  { id:"doug",    name:"Doug" }
 ];
 const STUDIO_OPEN_MIN = 11 * 60;   // 11:00 AM, in minutes since midnight
 const STUDIO_CLOSE_MIN = 19 * 60;  // 7:00 PM
@@ -510,68 +517,6 @@ const STUDIO_DAYS = [2,3,4,5,6]; // Tue(2)-Sat(6) open, Sun/Mon closed
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const DOW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 
-/* ---------- Mobile nav toggle ---------- */
-const navToggle = document.getElementById("navToggle");
-const navLinksEl = document.querySelector(".navlinks");
-if(navToggle && navLinksEl){
-  navToggle.addEventListener("click", () => {
-    const open = navLinksEl.classList.toggle("open");
-    navToggle.setAttribute("aria-expanded", open ? "true" : "false");
-  });
-  navLinksEl.querySelectorAll("a").forEach(a => a.addEventListener("click", () => {
-    navLinksEl.classList.remove("open");
-    navToggle.setAttribute("aria-expanded", "false");
-  }));
-}
-
-/* ---------- Gallery (original SVG flash-style art, no external images) ---------- */
-const GALLERY = [
-  { artist:"mara", title:"Negative-space moth", svg: svgMoth() },
-  { artist:"mara", title:"Linework mountain range", svg: svgMountain() },
-  { artist:"mara", title:"Single-needle botanical sleeve", svg: svgBotanical() },
-  { artist:"desmond", title:"Traditional swallow pair", svg: svgSwallow() },
-  { artist:"desmond", title:"Color realism rose", svg: svgRose() },
-  { artist:"desmond", title:"Banner & dagger", svg: svgDagger() },
-  { artist:"yuki", title:"Koi & wave half-sleeve", svg: svgKoi() },
-  { artist:"yuki", title:"Crane in flight", svg: svgCrane() }
-];
-
-function svgWrap(inner, accent){
-  return `<svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">
-    <rect width="300" height="400" fill="#ece0c3"/>
-    <g stroke="${accent}" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round">${inner}</g>
-  </svg>`;
-}
-function svgMoth(){return svgWrap(`<path d="M150 90 L150 310"/><path d="M150 130 C80 90 40 140 55 210 C70 270 120 260 150 200"/><path d="M150 130 C220 90 260 140 245 210 C230 270 180 260 150 200"/><circle cx="150" cy="95" r="8"/><path d="M142 88 L120 60 M158 88 L180 60"/>`,"#d4a94f");}
-function svgMountain(){return svgWrap(`<path d="M30 280 L100 160 L140 210 L190 120 L270 280 Z"/><path d="M30 280 L270 280"/><circle cx="220" cy="100" r="22"/>`,"#221c14");}
-function svgBotanical(){return svgWrap(`<path d="M150 40 C150 140 150 260 150 360"/><path d="M150 90 C110 100 90 130 95 150 C130 150 150 120 150 90"/><path d="M150 130 C190 140 210 170 205 190 C170 190 150 160 150 130"/><path d="M150 180 C110 190 90 220 95 240 C130 240 150 210 150 180"/><path d="M150 230 C190 240 210 270 205 290 C170 290 150 260 150 230"/><circle cx="150" cy="55" r="14"/>`,"#d4a94f");}
-function svgSwallow(){return svgWrap(`<path d="M70 200 C100 160 140 170 150 200 C160 170 200 160 230 200 C210 230 180 220 150 240 C120 220 90 230 70 200 Z"/><path d="M150 200 L150 240"/><path d="M120 250 L150 280 L180 250"/>`,"#221c14");}
-function svgRose(){return svgWrap(`<circle cx="150" cy="170" r="16"/><circle cx="150" cy="170" r="34"/><circle cx="150" cy="170" r="52"/><path d="M150 222 L150 320"/><path d="M150 250 C120 250 110 230 120 215 M150 270 C180 270 190 250 180 235"/><path d="M115 130 L100 110 M185 130 L200 110"/>`,"#c14a3a");}
-function svgDagger(){return svgWrap(`<path d="M150 50 L150 250"/><path d="M120 80 L180 80"/><path d="M135 250 L165 250 L150 290 Z"/><path d="M150 250 L150 90"/><path d="M90 200 C120 190 180 190 210 200 C190 230 110 230 90 200 Z"/><text x="150" y="215" font-family="JetBrains Mono" font-size="13" fill="#221c14" text-anchor="middle">HOLD FAST</text>`,"#d4a94f");}
-function svgKoi(){return svgWrap(`<path d="M70 220 C110 190 170 190 210 220 C230 230 250 220 260 200 C250 230 230 250 210 245 C170 280 110 280 80 250 C60 240 50 220 60 200 C55 215 60 220 70 220 Z"/><circle cx="200" cy="210" r="4"/><path d="M40 260 C70 250 100 270 90 290 M120 300 C150 290 180 310 170 330 M200 270 C230 260 260 280 250 300"/>`,"#221c14");}
-function svgCrane(){return svgWrap(`<path d="M90 280 C100 220 130 180 150 150 C160 130 150 110 165 100"/><path d="M150 150 C200 140 240 160 260 130"/><path d="M90 280 L90 330 M150 280 L150 330"/><circle cx="167" cy="98" r="6"/><path d="M173 95 L195 88"/>`,"#d4a94f");}
-
-function renderGallery(filter){
-  const grid = document.getElementById("galleryGrid");
-  grid.innerHTML = "";
-  GALLERY.filter(g => filter === "all" || g.artist === filter).forEach(g => {
-    const card = document.createElement("div");
-    card.className = "gcard";
-    card.innerHTML = g.svg + `<div class="tag"><span>${g.title}</span></div>`;
-    grid.appendChild(card);
-  });
-}
-document.getElementById("galleryTabs").addEventListener("click", e => {
-  if(!e.target.classList.contains("gtab")) return;
-  document.querySelectorAll(".gtab").forEach(b => b.classList.remove("active"));
-  e.target.classList.add("active");
-  renderGallery(e.target.dataset.filter);
-});
-renderGallery("all");
-
-/* =========================================================
-   SHARED HELPERS
-   ========================================================= */
 const SUPABASE_URL = "https://bvsgrgdardumiabfewwr.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable__Qic8J69dJyd76lnVw2m-A_OaF0R9nO";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -744,14 +689,21 @@ function renderCalendarGrid(){
 
     const bookingsToday = calBookingsByDate[key] || {};
     const blocksToday = calBlocksByDate[key] || {};
-    const bookedCount = Object.keys(bookingsToday).length;
-    const blockedCount = Object.keys(blocksToday).length;
+    const dayGroups = groupDayItems(bookingsToday, blocksToday);
 
-    let dots = "";
-    if(bookedCount) dots += `<span class="dot dot-booked" title="${bookedCount} appointment${bookedCount > 1 ? "s" : ""}"></span>`;
-    if(blockedCount) dots += `<span class="dot dot-blocked" title="${blockedCount} blocked"></span>`;
+    const MAX_VISIBLE_LINES = window.innerWidth < 480 ? 1 : (window.innerWidth < 700 ? 2 : 3);
+    let eventsHtml = dayGroups.slice(0, MAX_VISIBLE_LINES).map(g => {
+      if(g.type === "booking"){
+        const firstName = g.name ? g.name.split(" ")[0] : "Guest";
+        return `<span class="cal-event-line" title="${g.startTime}\u2013${g.endTime} — ${g.name}">${firstName}</span>`;
+      }
+      return `<span class="cal-event-line blocked" title="${g.startTime}\u2013${g.endTime} — Blocked">Blocked</span>`;
+    }).join("");
+    if(dayGroups.length > MAX_VISIBLE_LINES){
+      eventsHtml += `<span class="cal-more">+${dayGroups.length - MAX_VISIBLE_LINES} more</span>`;
+    }
 
-    cell.innerHTML = `<span class="cal-daynum">${dayNum}</span><span class="cal-dots">${dots}</span>`;
+    cell.innerHTML = `<span class="cal-daynum">${dayNum}</span><div class="cal-day-events">${eventsHtml}</div>`;
 
     if(isStudioDay){
       cell.addEventListener("click", () => openDayModal(key));
@@ -775,24 +727,56 @@ function closeDayModal(){
 document.getElementById("dayModalClose").addEventListener("click", closeDayModal);
 dayModal.addEventListener("click", (e) => { if(e.target === dayModal) closeDayModal(); });
 
-function populateTimeDropdown(selectId, excludeTaken){
+function populateFullTimeDropdown(selectId){
   const sel = document.getElementById(selectId);
   sel.innerHTML = "";
-  const bookingsToday = calBookingsByDate[selectedDate] || {};
-  const blocksToday = calBlocksByDate[selectedDate] || {};
   DAILY_TIMES.forEach(t => {
-    if(excludeTaken && (bookingsToday[t] || blocksToday[t])) return;
     const opt = document.createElement("option");
     opt.value = t;
     opt.textContent = t;
     sel.appendChild(opt);
   });
-  if(sel.options.length === 0){
-    const opt = document.createElement("option");
-    opt.textContent = "No open times left that day";
-    opt.disabled = true;
-    sel.appendChild(opt);
-  }
+}
+
+// Groups a day's bookings/blocks into contiguous ranges for display — so a
+// 3-hour tattoo appointment shows as ONE "2:00–5:00 PM — Jordan Reyes" line
+// instead of twelve separate 15-minute rows. Bookings only merge with an
+// adjacent slot if the name/phone/note all match (i.e. it's really the same
+// appointment); any two adjacent blocked slots always merge.
+function groupDayItems(bookingsToday, blocksToday){
+  const allTimes = Array.from(new Set([...Object.keys(bookingsToday), ...Object.keys(blocksToday)]))
+    .sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+
+  const groups = [];
+  let current = null;
+
+  allTimes.forEach(t => {
+    const isBooking = !!bookingsToday[t];
+    const row = isBooking ? bookingsToday[t] : blocksToday[t];
+    const type = isBooking ? "booking" : "block";
+    const groupKey = isBooking ? `b|${row.name}|${row.phone}|${row.note || ""}` : "block";
+    const startMin = timeToMinutes(t);
+
+    const canExtend = current && current.type === type && current.groupKey === groupKey && current.endMin === startMin;
+
+    if(canExtend){
+      current.endMin += SLOT_STEP_MIN;
+      current.ids.push(row.id);
+      current.times.push(t);
+    } else {
+      current = {
+        type, groupKey,
+        startMin, endMin: startMin + SLOT_STEP_MIN,
+        name: isBooking ? row.name : null,
+        note: isBooking ? row.note : null,
+        ids: [row.id],
+        times: [t],
+      };
+      groups.push(current);
+    }
+  });
+
+  return groups.map(g => ({ ...g, startTime: minutesToLabel(g.startMin), endTime: minutesToLabel(g.endMin) }));
 }
 
 function renderDayModal(){
@@ -804,27 +788,24 @@ function renderDayModal(){
 
   const bookingsToday = calBookingsByDate[selectedDate] || {};
   const blocksToday = calBlocksByDate[selectedDate] || {};
-
-  const items = [];
-  Object.keys(bookingsToday).forEach(t => items.push({ time: t, type: "booking", data: bookingsToday[t] }));
-  Object.keys(blocksToday).forEach(t => items.push({ time: t, type: "block", data: blocksToday[t] }));
-  items.sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
+  const groups = groupDayItems(bookingsToday, blocksToday);
 
   const listEl = document.getElementById("dayModalList");
-  if(items.length === 0){
+  if(groups.length === 0){
     listEl.innerHTML = `<p class="empty-note">Nothing booked or blocked yet.</p>`;
   } else {
-    listEl.innerHTML = items.map(it => {
-      if(it.type === "booking"){
-        const notePreview = it.data.note ? " · " + (it.data.note.length > 44 ? it.data.note.slice(0, 44) + "…" : it.data.note) : "";
+    listEl.innerHTML = groups.map(g => {
+      const idsAttr = g.ids.join(",");
+      if(g.type === "booking"){
+        const notePreview = g.note ? " · " + (g.note.length > 44 ? g.note.slice(0, 44) + "…" : g.note) : "";
         return `<div class="staff-slot booked">
-          <span class="lbl" data-action="edit" data-id="${it.data.id}" title="Click to edit">${it.time} — ${it.data.name}${notePreview}</span>
-          <button data-action="cancel" data-id="${it.data.id}">Cancel</button>
+          <span class="lbl" data-action="edit" data-ids="${idsAttr}" title="Click to edit">${g.startTime}\u2013${g.endTime} — ${g.name}${notePreview}</span>
+          <button data-action="cancel" data-ids="${idsAttr}">Cancel</button>
         </div>`;
       }
       return `<div class="staff-slot blocked">
-        <span class="lbl">${it.time} — Blocked</span>
-        <button data-action="unblock" data-id="${it.data.id}">Unblock</button>
+        <span class="lbl">${g.startTime}\u2013${g.endTime} — Blocked</span>
+        <button data-action="unblock" data-ids="${idsAttr}">Unblock</button>
       </div>`;
     }).join("");
   }
@@ -832,7 +813,7 @@ function renderDayModal(){
   listEl.querySelectorAll("button[data-action]").forEach(btn => btn.addEventListener("click", handleStaffAction));
   listEl.querySelectorAll("span[data-action='edit']").forEach(span => span.addEventListener("click", () => {
     closeDayModal();
-    openEditModal(span.dataset.id);
+    openEditModal(span.dataset.ids);
   }));
 
   document.getElementById("addApptFormWrap").style.display = "none";
@@ -845,7 +826,9 @@ document.getElementById("showAddApptBtn").addEventListener("click", () => {
   document.getElementById("addName").value = "";
   document.getElementById("addPhone").value = "";
   document.getElementById("addNote").value = "";
-  populateTimeDropdown("addApptTime", true);
+  populateFullTimeDropdown("addStartTime");
+  populateFullTimeDropdown("addEndTime");
+  document.getElementById("addEndTime").selectedIndex = 1; // defaults to a 15-min appointment
   document.getElementById("addApptFormWrap").style.display = "block";
   document.getElementById("blockTimeFormWrap").style.display = "none";
   document.getElementById("dayModalActions").style.display = "none";
@@ -854,7 +837,9 @@ document.getElementById("addCancelBtn").addEventListener("click", renderDayModal
 
 document.getElementById("showBlockTimeBtn").addEventListener("click", () => {
   document.getElementById("blockMsg").textContent = "";
-  populateTimeDropdown("blockTime", true);
+  populateFullTimeDropdown("blockStartTime");
+  populateFullTimeDropdown("blockEndTime");
+  document.getElementById("blockEndTime").selectedIndex = 1; // defaults to a 15-min block
   document.getElementById("blockTimeFormWrap").style.display = "block";
   document.getElementById("addApptFormWrap").style.display = "none";
   document.getElementById("dayModalActions").style.display = "none";
@@ -864,16 +849,20 @@ document.getElementById("blockCancelBtn").addEventListener("click", renderDayMod
 async function handleStaffAction(e){
   const btn = e.currentTarget;
   const action = btn.dataset.action;
+  const ids = btn.dataset.ids.split(",");
 
-  if(action === "cancel" && !confirm("Cancel this client's appointment?")) return;
+  if(action === "cancel"){
+    const msg = ids.length > 1 ? "Cancel this client's full appointment?" : "Cancel this client's appointment?";
+    if(!confirm(msg)) return;
+  }
 
   btn.disabled = true;
 
   let error = null;
   if(action === "unblock"){
-    ({ error } = await supabaseClient.from("blocked_slots").delete().eq("id", btn.dataset.id));
+    ({ error } = await supabaseClient.from("blocked_slots").delete().in("id", ids));
   } else if(action === "cancel"){
-    ({ error } = await supabaseClient.from("bookings").delete().eq("id", btn.dataset.id));
+    ({ error } = await supabaseClient.from("bookings").delete().in("id", ids));
   }
 
   if(error) alert("Something went wrong: " + error.message);
@@ -887,31 +876,55 @@ document.getElementById("addSaveBtn").addEventListener("click", async () => {
   const msg = document.getElementById("addMsg");
   msg.textContent = "";
 
-  const time = document.getElementById("addApptTime").value;
+  const startTime = document.getElementById("addStartTime").value;
+  const endTime = document.getElementById("addEndTime").value;
   const name = document.getElementById("addName").value.trim();
   const phone = document.getElementById("addPhone").value.trim();
   const note = document.getElementById("addNote").value.trim();
 
-  if(!time){ msg.textContent = "Pick a time."; return; }
+  const startMin = timeToMinutes(startTime);
+  const endMin = timeToMinutes(endTime);
+
+  if(endMin <= startMin){ msg.textContent = "End time must be after start time."; return; }
   if(!name){ msg.textContent = "Client name is required."; return; }
   if(!phone || phone.replace(/\D/g, "").length < 7){ msg.textContent = "Enter a valid phone number."; return; }
+
+  const bookingsToday = calBookingsByDate[selectedDate] || {};
+  const blocksToday = calBlocksByDate[selectedDate] || {};
+
+  const timesInRange = DAILY_TIMES.filter(t => {
+    const m = timeToMinutes(t);
+    return m >= startMin && m < endMin;
+  });
+  if(timesInRange.length === 0){ msg.textContent = "Pick a valid time range."; return; }
+
+  const bookedConflict = timesInRange.find(t => bookingsToday[t]);
+  if(bookedConflict){
+    msg.textContent = `That overlaps an existing appointment at ${bookedConflict} — pick a different range.`;
+    return;
+  }
+  const blockedConflict = timesInRange.find(t => blocksToday[t]);
+  if(blockedConflict){
+    msg.textContent = `That overlaps blocked time at ${blockedConflict} — unblock it first or pick a different range.`;
+    return;
+  }
 
   const btn = document.getElementById("addSaveBtn");
   btn.disabled = true; btn.textContent = "Saving…";
 
   const { data: inserted, error } = await supabaseClient
     .from("bookings")
-    .insert({
+    .insert(timesInRange.map(t => ({
       name, phone, note: note || null,
-      artist_id: staffArtistId, appt_date: selectedDate, appt_time: time
-    })
+      artist_id: staffArtistId, appt_date: selectedDate, appt_time: t
+    })))
     .select();
 
   btn.disabled = false; btn.textContent = "Save Appointment";
 
   if(error){
     if(error.code === "23505"){
-      msg.textContent = "That time was just taken — pick another.";
+      msg.textContent = "That time was just taken — pick another range.";
     } else {
       console.error("Insert error:", error);
       msg.textContent = "Error: " + (error.message || "Something went wrong.");
@@ -933,17 +946,42 @@ document.getElementById("blockSaveBtn").addEventListener("click", async () => {
   const msg = document.getElementById("blockMsg");
   msg.textContent = "";
 
-  const time = document.getElementById("blockTime").value;
-  if(!time){ msg.textContent = "Pick a time."; return; }
+  const startTime = document.getElementById("blockStartTime").value;
+  const endTime = document.getElementById("blockEndTime").value;
+  const startMin = timeToMinutes(startTime);
+  const endMin = timeToMinutes(endTime);
+
+  if(endMin <= startMin){ msg.textContent = "End time must be after start time."; return; }
+
+  const bookingsToday = calBookingsByDate[selectedDate] || {};
+  const blocksToday = calBlocksByDate[selectedDate] || {};
+
+  // Every 15-min slot from start (inclusive) up to end (exclusive)
+  const timesInRange = DAILY_TIMES.filter(t => {
+    const m = timeToMinutes(t);
+    return m >= startMin && m < endMin;
+  });
+
+  const conflict = timesInRange.find(t => bookingsToday[t]);
+  if(conflict){
+    msg.textContent = `Can't block over an existing appointment at ${conflict} — cancel or move it first.`;
+    return;
+  }
+
+  const timesToInsert = timesInRange.filter(t => !blocksToday[t]);
+  if(timesToInsert.length === 0){
+    msg.textContent = "That whole range is already blocked.";
+    return;
+  }
 
   const btn = document.getElementById("blockSaveBtn");
   btn.disabled = true; btn.textContent = "Blocking…";
 
-  const { error } = await supabaseClient.from("blocked_slots").insert({
-    artist_id: staffArtistId, appt_date: selectedDate, appt_time: time
-  });
+  const { error } = await supabaseClient.from("blocked_slots").insert(
+    timesToInsert.map(t => ({ artist_id: staffArtistId, appt_date: selectedDate, appt_time: t }))
+  );
 
-  btn.disabled = false; btn.textContent = "Block This Time";
+  btn.disabled = false; btn.textContent = "Block This Range";
 
   if(error){
     console.error("Block error:", error);
@@ -981,41 +1019,46 @@ document.getElementById("calTodayBtn").addEventListener("click", async () => {
 
 /* =========================================================
    EDIT APPOINTMENT MODAL
-   Lets a signed-in artist click any of their booked times and
-   update the client's name/phone/note, move the appointment to
-   a different date/time, or cancel it outright.
+   Lets a signed-in artist click any booked appointment (which
+   may span several 15-min slots) and update the client's
+   name/phone/note, move it to a different date/time range, or
+   cancel it outright.
+
+   Saving uses a safe order to avoid ever losing data: it INSERTS
+   the new time range first (so a conflict there leaves the
+   original appointment untouched), then updates any slots that
+   are common to both the old and new range, then finally deletes
+   whichever old slots are no longer part of the new range.
    ========================================================= */
 const editModal = document.getElementById("editModal");
-let editingBookingId = null;
+let editingGroup = null; // { ids, date, times }
 
-function populateEditDateTimeOptions(currentDate, currentTime){
-  document.getElementById("editDate").value = currentDate;
+function openEditModal(idsCsv){
+  const ids = idsCsv.split(",");
+  const rows = ids.map(id => staffBookingsById[id]).filter(Boolean);
+  if(rows.length === 0) return;
 
-  const timeSel = document.getElementById("editTime");
-  timeSel.innerHTML = "";
-  DAILY_TIMES.forEach(t => {
-    const opt = document.createElement("option");
-    opt.value = t;
-    opt.textContent = t;
-    if(t === currentTime) opt.selected = true;
-    timeSel.appendChild(opt);
-  });
-}
+  rows.sort((a, b) => timeToMinutes(a.appt_time) - timeToMinutes(b.appt_time));
+  const first = rows[0];
+  const startTime = first.appt_time;
+  const endTime = minutesToLabel(timeToMinutes(rows[rows.length - 1].appt_time) + SLOT_STEP_MIN);
 
-function openEditModal(id){
-  const bk = staffBookingsById[id];
-  if(!bk) return;
-  editingBookingId = id;
+  editingGroup = { ids, date: first.appt_date, times: rows.map(r => r.appt_time) };
 
   document.getElementById("editModalMsg").textContent = "";
-  document.getElementById("editName").value = bk.name || "";
-  document.getElementById("editPhone").value = bk.phone || "";
-  document.getElementById("editNote").value = bk.note || "";
-  populateEditDateTimeOptions(bk.appt_date, bk.appt_time);
+  document.getElementById("editName").value = first.name || "";
+  document.getElementById("editPhone").value = first.phone || "";
+  document.getElementById("editNote").value = first.note || "";
+  document.getElementById("editDate").value = first.appt_date;
 
-  const artist = ARTISTS.find(a => a.id === bk.artist_id);
+  populateFullTimeDropdown("editStartTime");
+  populateFullTimeDropdown("editEndTime");
+  document.getElementById("editStartTime").value = startTime;
+  document.getElementById("editEndTime").value = endTime;
+
+  const artist = ARTISTS.find(a => a.id === first.artist_id);
   document.getElementById("editModalSub").textContent =
-    `${artist ? artist.name : bk.artist_id} — editing this client's appointment`;
+    `${artist ? artist.name : first.artist_id} — editing this client's appointment`;
 
   const saveBtn = document.getElementById("editSaveBtn");
   const delBtn = document.getElementById("editDeleteBtn");
@@ -1027,14 +1070,14 @@ function openEditModal(id){
 
 function closeEditModal(){
   editModal.classList.remove("open");
-  editingBookingId = null;
+  editingGroup = null;
 }
 
 document.getElementById("editModalClose").addEventListener("click", closeEditModal);
 editModal.addEventListener("click", (e) => { if(e.target === editModal) closeEditModal(); });
 
 document.getElementById("editSaveBtn").addEventListener("click", async () => {
-  if(!editingBookingId) return;
+  if(!editingGroup) return;
   const msg = document.getElementById("editModalMsg");
   msg.textContent = "";
 
@@ -1042,52 +1085,108 @@ document.getElementById("editSaveBtn").addEventListener("click", async () => {
   const phone = document.getElementById("editPhone").value.trim();
   const note = document.getElementById("editNote").value.trim();
   const newDate = document.getElementById("editDate").value;
-  const newTime = document.getElementById("editTime").value;
+  const startTime = document.getElementById("editStartTime").value;
+  const endTime = document.getElementById("editEndTime").value;
 
   if(!name){ msg.textContent = "Name can't be empty."; return; }
   if(!phone || phone.replace(/\D/g, "").length < 7){ msg.textContent = "Enter a valid phone number."; return; }
   if(!newDate){ msg.textContent = "Pick a date."; return; }
 
+  const startMin = timeToMinutes(startTime);
+  const endMin = timeToMinutes(endTime);
+  if(endMin <= startMin){ msg.textContent = "End time must be after start time."; return; }
+
+  const newTimes = DAILY_TIMES.filter(t => {
+    const m = timeToMinutes(t);
+    return m >= startMin && m < endMin;
+  });
+  if(newTimes.length === 0){ msg.textContent = "Pick a valid time range."; return; }
+
+  // Diff against the appointment's original slots so we only touch what
+  // actually changed — this is what makes the save order below safe.
+  const sameDay = newDate === editingGroup.date;
+  const oldTimesSet = new Set(sameDay ? editingGroup.times : []);
+  const newTimesSet = new Set(newTimes);
+
+  const timesToInsert = newTimes.filter(t => !oldTimesSet.has(t));
+  const idsToUpdate = sameDay
+    ? editingGroup.ids.filter((id, i) => newTimesSet.has(editingGroup.times[i]))
+    : [];
+  const idsToDelete = editingGroup.ids.filter((id, i) =>
+    !(sameDay && newTimesSet.has(editingGroup.times[i]))
+  );
+
+  // Conflict-check the genuinely new slots against other appointments/blocks
+  // for the target date (excluding this appointment's own rows).
+  const bookingsOnDate = calBookingsByDate[newDate] || {};
+  const blocksOnDate = calBlocksByDate[newDate] || {};
+  const ownIds = new Set(editingGroup.ids);
+  const bookedConflict = timesToInsert.find(t => bookingsOnDate[t] && !ownIds.has(bookingsOnDate[t].id));
+  if(bookedConflict){
+    msg.textContent = `That overlaps another appointment at ${bookedConflict} — pick a different range.`;
+    return;
+  }
+  const blockedConflict = timesToInsert.find(t => blocksOnDate[t]);
+  if(blockedConflict){
+    msg.textContent = `That overlaps blocked time at ${blockedConflict} — unblock it first or pick a different range.`;
+    return;
+  }
+
   const btn = document.getElementById("editSaveBtn");
   btn.disabled = true; btn.textContent = "Saving…";
 
-  const { data: updated, error } = await supabaseClient
-    .from("bookings")
-    .update({
-      name: name,
-      phone: phone,
-      note: note || null,
-      appt_date: newDate,
-      appt_time: newTime
-    })
-    .eq("id", editingBookingId)
-    .select();
+  if(timesToInsert.length > 0){
+    const { error: insertError } = await supabaseClient.from("bookings").insert(
+      timesToInsert.map(t => ({
+        name, phone, note: note || null,
+        artist_id: staffArtistId, appt_date: newDate, appt_time: t
+      }))
+    );
+    if(insertError){
+      btn.disabled = false; btn.textContent = "Save Changes";
+      if(insertError.code === "23505"){
+        msg.textContent = "That range overlaps something else — pick a different time.";
+      } else {
+        console.error("Insert error:", insertError);
+        msg.textContent = "Error: " + (insertError.message || "Something went wrong.");
+      }
+      return; // nothing has been touched yet — the original appointment is untouched
+    }
+  }
+
+  if(idsToUpdate.length > 0){
+    const { error: updateError } = await supabaseClient
+      .from("bookings")
+      .update({ name, phone, note: note || null })
+      .in("id", idsToUpdate);
+    if(updateError){
+      btn.disabled = false; btn.textContent = "Save Changes";
+      console.error("Update error:", updateError);
+      msg.textContent = "Error updating client info: " + (updateError.message || "Something went wrong.") +
+        " The new time range was saved — you may want to check for a duplicate.";
+      return;
+    }
+  }
+
+  if(idsToDelete.length > 0){
+    const { error: deleteError } = await supabaseClient.from("bookings").delete().in("id", idsToDelete);
+    if(deleteError){
+      btn.disabled = false; btn.textContent = "Save Changes";
+      console.error("Delete error:", deleteError);
+      msg.textContent = "Saved the new time, but couldn't clear the old slots: " + (deleteError.message || "Something went wrong.") +
+        " You may want to check for leftover blocked-looking time.";
+      return;
+    }
+  }
 
   btn.disabled = false; btn.textContent = "Save Changes";
-
-  if(error){
-    if(error.code === "23505"){
-      msg.textContent = "That date/time was just taken — pick another.";
-    } else {
-      console.error("Supabase update error:", error);
-      msg.textContent = "Error: " + (error.message || "Something went wrong saving these changes.");
-    }
-    return;
-  }
-
-  if(!updated || updated.length === 0){
-    msg.textContent = "Save blocked — make sure the staff RLS policies are applied in Supabase.";
-    console.warn("Update returned 0 rows. Likely missing authenticated UPDATE policy on bookings table.");
-    return;
-  }
-
   closeEditModal();
   await loadMonthData();
   renderCalendarGrid();
 });
 
 document.getElementById("editDeleteBtn").addEventListener("click", async () => {
-  if(!editingBookingId) return;
+  if(!editingGroup) return;
   if(!confirm("Cancel this client's appointment entirely?")) return;
 
   const btn = document.getElementById("editDeleteBtn");
@@ -1096,7 +1195,7 @@ document.getElementById("editDeleteBtn").addEventListener("click", async () => {
   const { data: deleted, error } = await supabaseClient
     .from("bookings")
     .delete()
-    .eq("id", editingBookingId)
+    .in("id", editingGroup.ids)
     .select();
 
   if(error){
