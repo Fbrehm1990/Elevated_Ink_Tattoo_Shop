@@ -638,7 +638,7 @@ const SB_KEY = "sb_publishable__Qic8J69dJyd76lnVw2m-A_OaF0R9nO";
     const fig = document.createElement("figure");
     fig.className = "spot-slide" + (s.fit === "contain" ? " contain" : "");
     const im = document.createElement("img");
-    im.src = s.img; im.alt = s.alt; if(i > 0) im.loading = "lazy";
+    im.src = s.img; im.alt = s.alt;
     fig.appendChild(im); track.appendChild(fig);
     const d = document.createElement("button");
     d.type = "button"; d.className = "spot-dot"; d.setAttribute("aria-label", "Show photo " + (i + 1));
