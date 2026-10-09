@@ -60,7 +60,7 @@
     flex-direction:column; gap:0; background:var(--paper); border-bottom:3px solid var(--ink);
     padding:6px 28px 18px; z-index:60;
   }
-  .navlinks.open a{padding:13px 0; border-bottom:1px solid var(--line);}
+  .navlinks.open a{display:block; padding:13px 0; border-bottom:1px solid var(--line);}
 
   /* ---------- HERO ---------- */
   .hero{padding:90px 0 80px; border-bottom:3px solid var(--ink);}
@@ -118,6 +118,7 @@
   .gallery-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:20px;}
   .gcard{position:relative; border:2px solid var(--ink); background:#ece0c3; aspect-ratio:3/4; overflow:hidden;}
   .gcard svg{width:100%; height:100%; display:block;}
+  .gcard img{width:100%; height:100%; object-fit:cover; display:block;}
   .gcard .tag{
     position:absolute; bottom:0; left:0; right:0; padding:10px 12px;
     background:rgba(23,19,14,0.88); font-size:11.5px; color:#ece0c3; display:flex; justify-content:space-between;
@@ -254,6 +255,9 @@
   .foot-meta{font-size:12.5px; color:var(--ink-soft); display:flex; gap:22px; flex-wrap:wrap; align-items:center;}
   .foot-meta a{color:var(--ink-soft); text-decoration:underline;}
   .foot-meta a:hover{color:var(--ink);}
+  .foot-legal{width:100%; display:flex; gap:16px; flex-wrap:wrap; margin-top:14px; padding-top:14px; border-top:1px solid var(--line); font-size:11.5px;}
+  .foot-legal a{color:var(--ink-soft); text-decoration:underline;}
+  .foot-legal a:hover{color:var(--ink);}
 
   @media(max-width:920px){
     .navlinks{display:none;}
@@ -477,6 +481,11 @@
       <span>(681) 575-0008</span>
       <a href="mailto:elevatedink2025@gmail.com">elevatedink2025@gmail.com</a>
     </div>
+    <div class="foot-legal">
+      <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="accessibility.html">Accessibility Statement</a>
+    </div>
   </div>
 </footer>
 
@@ -498,15 +507,23 @@ if(navToggle && navLinksEl){
   }));
 }
 
-/* ---------- Gallery (original SVG flash-style art, no external images) ---------- */
+/* ---------- Gallery (real work in images/, credited per artist) ---------- */
 const GALLERY = [
-  { artist:"tj", title:"Moth study", svg: svgMoth() },
-  { artist:"tj", title:"Mountain linework", svg: svgMountain() },
-  { artist:"austin", title:"Botanical piece", svg: svgBotanical() },
-  { artist:"austin", title:"Swallow pair", svg: svgSwallow() },
-  { artist:"ariana", title:"Rose in color", svg: svgRose() },
-  { artist:"makenzi", title:"Banner & dagger", svg: svgDagger() },
-  { artist:"aaron", title:"Koi & wave", svg: svgKoi() },
+  { artist:"tj", title:"Greek mythology sleeve", img:"images/tj-1.jpg" },
+  { artist:"tj", title:"Color dragon back piece", img:"images/tj-2.jpg" },
+  { artist:"tj", title:"Black & grey skull sleeve", img:"images/tj-3.jpg" },
+  { artist:"austin", title:"Twilight, color traditional", img:"images/austin-1.jpg" },
+  { artist:"austin", title:"T-Rex, American traditional", img:"images/austin-2.jpg" },
+  { artist:"austin", title:"Scorpion, American traditional", img:"images/austin-3.jpg" },
+  { artist:"ariana", title:"Persephone portrait", img:"images/ariana-1.jpg" },
+  { artist:"ariana", title:"Bride of Frankenstein", img:"images/ariana-2.jpg" },
+  { artist:"ariana", title:"Orca", img:"images/ariana-3.jpg" },
+  { artist:"makenzi", title:"Horror character piece", img:"images/makenzi-1.jpg" },
+  { artist:"makenzi", title:"Reaper back piece", img:"images/makenzi-2.jpg" },
+  { artist:"makenzi", title:"Van Gogh skeleton", img:"images/makenzi-3.jpg" },
+  { artist:"aaron", title:"Crocodile realism", img:"images/aaron-1.jpg" },
+  { artist:"aaron", title:"Lion portrait", img:"images/aaron-2.jpg" },
+  { artist:"aaron", title:"Owl & florals, color", img:"images/aaron-3.jpg" },
   { artist:"doug", title:"Crane in flight", svg: svgCrane() }
 ];
 
@@ -525,13 +542,15 @@ function svgDagger(){return svgWrap(`<path d="M150 50 L150 250"/><path d="M120 8
 function svgKoi(){return svgWrap(`<path d="M70 220 C110 190 170 190 210 220 C230 230 250 220 260 200 C250 230 230 250 210 245 C170 280 110 280 80 250 C60 240 50 220 60 200 C55 215 60 220 70 220 Z"/><circle cx="200" cy="210" r="4"/><path d="M40 260 C70 250 100 270 90 290 M120 300 C150 290 180 310 170 330 M200 270 C230 260 260 280 250 300"/>`,"#221c14");}
 function svgCrane(){return svgWrap(`<path d="M90 280 C100 220 130 180 150 150 C160 130 150 110 165 100"/><path d="M150 150 C200 140 240 160 260 130"/><path d="M90 280 L90 330 M150 280 L150 330"/><circle cx="167" cy="98" r="6"/><path d="M173 95 L195 88"/>`,"#d4a94f");}
 
+const ARTIST_NAMES = {"tj": "TJ", "austin": "Austin", "ariana": "Ariana", "makenzi": "Makenzi", "aaron": "Aaron", "doug": "Doug"};
 function renderGallery(filter){
   const grid = document.getElementById("galleryGrid");
   grid.innerHTML = "";
   GALLERY.filter(g => filter === "all" || g.artist === filter).forEach(g => {
     const card = document.createElement("div");
     card.className = "gcard";
-    card.innerHTML = g.svg + `<div class="tag"><span>${g.title}</span></div>`;
+    card.innerHTML = (g.img ? `<img src="${g.img}" alt="${g.title} tattoo by ${ARTIST_NAMES[g.artist]}" loading="lazy">` : g.svg) + `<div class="tag"><span>${g.title}</span><b>${ARTIST_NAMES[g.artist]}</b></div>`;
+    const im = card.querySelector("img"); if(im) im.addEventListener("error", () => card.remove());
     grid.appendChild(card);
   });
 }
