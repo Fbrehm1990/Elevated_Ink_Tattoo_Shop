@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>My Portfolio — Elevated Ink Tattoo Co.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --paper:#17130e; --paper-alt:#221c14; --ink:#ece0c3; --ink-soft:#b9ab8c;
+    --red:#c14a3a; --red-bright:#d65b46; --green:#2f7d55; --gold:#d4a94f; --line:#443a2c; --max:1180px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background-color:var(--paper); color:var(--ink); font-family:'Libre Franklin',sans-serif; font-size:16px; line-height:1.6;
+    background-image:url('logo-watermark.png'); background-repeat:no-repeat; background-position:center center;
+    background-attachment:fixed; background-size:min(85vw, 1000px) auto;
+  }
+  a{color:inherit;}
+  img{max-width:100%; display:block;}
+  .wrap{max-width:var(--max); margin:0 auto; padding:0 28px;}
+  h1,h2,h3{margin:0; font-family:'Alfa Slab One',serif; font-weight:400; line-height:1.1;}
+  h2{font-size:clamp(28px,3.6vw,40px);}
+
+  header{position:sticky; top:0; z-index:50; background:var(--paper); border-bottom:3px solid var(--ink);}
+  nav.wrap{display:flex; align-items:center; justify-content:space-between; height:76px;}
+  .brand-logo{height:46px; width:auto; display:block;}
+  .nav-links{display:flex; gap:12px; flex-wrap:wrap; justify-content:flex-end;}
+  .back-link{font-weight:600; font-size:13px; color:var(--ink-soft); text-decoration:none; border:2px solid var(--line); padding:8px 14px; transition:all .2s;}
+  .back-link:hover{color:var(--ink); border-color:var(--ink);}
+
+  section{padding:60px 0 80px;}
+  .sec-head{margin-bottom:30px; max-width:640px;}
+  .sec-head p{color:var(--ink-soft); font-size:15px; margin:8px 0 0;}
+
+  .btn{font-family:inherit; font-weight:700; font-size:14px; padding:12px 22px; text-decoration:none; display:inline-block; transition:all .2s; cursor:pointer; border:2px solid var(--ink);}
+  .btn-primary{background:var(--ink); color:var(--paper);}
+  .btn-primary:hover{background:var(--red); border-color:var(--red); color:var(--ink);}
+  .btn-ghost{background:transparent; color:var(--ink);}
+  .btn-ghost:hover{background:var(--ink); color:var(--paper);}
+  .btn-danger{background:transparent; border-color:var(--red); color:var(--red-bright);}
+  .btn-danger:hover{background:var(--red); color:var(--ink);}
+  .btn[disabled]{opacity:.55; cursor:not-allowed;}
+  .btn-sm{padding:7px 12px; font-size:12px;}
+
+  .shell{border:2px solid var(--ink); background:var(--paper-alt); padding:32px;}
+  .form-row{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:18px;}
+  .field label{display:block; font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.02em; color:var(--ink-soft); margin-bottom:7px;}
+  .field input[type=email], .field input[type=password], .field input[type=text]{
+    width:100%; padding:12px 14px; font:inherit; background:var(--paper); color:var(--ink); border:2px solid var(--line);
+  }
+  .field input:focus{outline:none; border-color:var(--red);}
+  .msg{min-height:22px; font-size:14px; margin:6px 0 14px; color:var(--red-bright);}
+  .msg.ok{color:#7fd4a0;}
+
+  .bar{display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:24px;}
+  .bar b{color:var(--gold);}
+
+  .upload-box{border:2px dashed var(--ink-soft); padding:22px; margin-bottom:12px; display:flex; gap:16px; align-items:center; flex-wrap:wrap;}
+  .upload-box p{margin:0; color:var(--ink-soft); font-size:14px; flex:1 1 240px;}
+  #fileInput{display:none;}
+
+  .grid{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:22px;}
+  .card{border:2px solid var(--ink); background:var(--paper); display:flex; flex-direction:column;}
+  .thumb{position:relative; aspect-ratio:3/4; background:#2b241a; overflow:hidden;}
+  .thumb img{width:100%; height:100%; object-fit:cover;}
+  .badge{position:absolute; top:8px; left:8px; background:var(--gold); color:#221c14; font-size:11px; font-weight:700; padding:3px 8px; letter-spacing:.02em;}
+  .cap{padding:8px 10px; font-size:12.5px; color:var(--ink-soft); min-height:34px; border-top:1px solid var(--line); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .actions{display:flex; gap:8px; padding:0 10px 10px;}
+  .actions .btn{flex:1;}
+  .empty{color:var(--ink-soft); padding:30px 0;}
+
+  details.removed{margin-top:34px; border-top:1px solid var(--line); padding-top:18px;}
+  details.removed summary{cursor:pointer; font-weight:600; color:var(--ink-soft);}
+  .mini-grid{display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-top:16px;}
+  .mini{border:2px solid var(--line); background:var(--paper);}
+  .mini img{width:100%; aspect-ratio:3/4; object-fit:cover; opacity:.6;}
+  .mini .btn{width:100%; border-width:0; border-top:2px solid var(--line);}
+
+  .modal{position:fixed; inset:0; z-index:100; background:rgba(10,8,5,.82); display:none; align-items:center; justify-content:center; padding:20px;}
+  .modal.open{display:flex;}
+  .modal-box{background:var(--paper-alt); border:2px solid var(--ink); padding:28px; width:100%; max-width:440px;}
+  .modal-box h3{font-size:22px; margin-bottom:16px;}
+  .modal-box .field{margin-bottom:16px;}
+  .check{display:flex; gap:10px; align-items:center; margin-bottom:20px; font-size:14px; cursor:pointer;}
+  .check input{width:18px; height:18px; accent-color:var(--red);}
+  .modal-actions{display:flex; gap:12px; justify-content:flex-end;}
+  .modal-preview{width:100%; max-height:240px; object-fit:contain; background:#2b241a; margin-bottom:16px;}
+
+  @media(max-width:900px){ .grid{grid-template-columns:repeat(3,1fr);} .mini-grid{grid-template-columns:repeat(4,1fr);} }
+  @media(max-width:600px){
+    .wrap{padding:0 16px;} .brand-logo{height:36px;}
+    .shell{padding:18px;} .form-row{grid-template-columns:1fr;}
+    .grid{grid-template-columns:repeat(2,1fr); gap:10px;} .mini-grid{grid-template-columns:repeat(3,1fr);}
+    .actions{flex-direction:column;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="wrap">
+    <a href="index.html" class="brand"><img src="logo.png" alt="Elevated Ink" class="brand-logo"></a>
+    <div class="nav-links">
+      <a href="scheduler.html" class="back-link">Scheduler</a>
+      <a href="index.html" class="back-link">&larr; Back to site</a>
+    </div>
+  </nav>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>My Portfolio</h2>
+      <p>Sign in to add, edit, or remove the photos on your own portfolio page. Each artist can only change their own work.</p>
+    </div>
+
+    <!-- SIGN IN (skipped automatically if you're already signed in on the scheduler) -->
+    <div class="shell" id="loginShell" style="display:none;">
+      <div class="form-row">
+        <div class="field"><label for="email">Email</label><input type="email" id="email" autocomplete="username"></div>
+        <div class="field"><label for="password">Password</label><input type="password" id="password" autocomplete="current-password"></div>
+      </div>
+      <div class="msg" id="loginMsg"></div>
+      <button class="btn btn-primary" id="loginBtn" type="button">Sign In</button>
+    </div>
+
+    <!-- MANAGER -->
+    <div class="shell" id="manager" style="display:none;">
+      <div class="bar">
+        <div>Signed in as <b id="artistName"></b> &middot; <a href="#" id="viewPage" target="_blank" rel="noopener">View my page</a></div>
+        <button class="btn btn-ghost btn-sm" id="logoutBtn" type="button">Sign Out</button>
+      </div>
+
+      <div class="upload-box">
+        <p>Add new photos (JPG, PNG or WebP). Large photos are resized automatically before upload.</p>
+        <button class="btn btn-primary" id="pickBtn" type="button">Add photos</button>
+        <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple>
+      </div>
+      <div class="msg" id="mgrMsg" role="status"></div>
+
+      <div id="count" style="color:var(--ink-soft); font-size:14px;"></div>
+      <div class="grid" id="grid"></div>
+
+      <details class="removed" id="removedWrap" style="display:none;">
+        <summary id="removedSummary">Removed photos</summary>
+        <div class="mini-grid" id="removedGrid"></div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- EDIT MODAL -->
+<div class="modal" id="editModal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+  <div class="modal-box">
+    <h3 id="editTitle">Edit photo</h3>
+    <img class="modal-preview" id="editPreview" alt="">
+    <div class="field">
+      <label for="editCaption">Caption (optional)</label>
+      <input type="text" id="editCaption" maxlength="80" placeholder="Leave blank to show just your name">
+    </div>
+    <label class="check"><input type="checkbox" id="editFeatured"> Feature this photo (shows first and on the homepage gallery)</label>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="editCancel" type="button">Cancel</button>
+      <button class="btn btn-primary" id="editSave" type="button">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://bvsgrgdardumiabfewwr.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable__Qic8J69dJyd76lnVw2m-A_OaF0R9nO";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const ARTISTS = { tj:"TJ", austin:"Austin", ariana:"Ariana", makenzi:"Makenzi", aaron:"Aaron", doug:"Doug" };
+const BUCKET = "portfolio";
+const MAX_SIDE = 1600;
+
+let artistId = null, items = [];   // items: every photo for this artist, visible or removed
+const $ = id => document.getElementById(id);
+
+function say(el, text, ok){ el.textContent = text || ""; el.classList.toggle("ok", !!ok); }
+
+/* ---------- sign in / out ---------- */
+$("loginBtn").addEventListener("click", async () => {
+  const email = $("email").value.trim(), password = $("password").value;
+  if(!email || !password){ say($("loginMsg"), "Enter your email and password."); return; }
+  $("loginBtn").disabled = true;
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  $("loginBtn").disabled = false;
+  if(error){ say($("loginMsg"), "Sign-in failed: " + error.message); return; }
+  await start();
+});
+$("logoutBtn").addEventListener("click", async () => {
+  await sb.auth.signOut();
+  artistId = null; items = [];
+  $("manager").style.display = "none"; $("loginShell").style.display = "block"; $("password").value = "";
+});
+
+async function start(){
+  const { data: sess } = await sb.auth.getSession();
+  if(!sess.session){ $("loginShell").style.display = "block"; return; }
+  const { data: profile, error } = await sb.from("artist_profiles").select("artist_id").single();
+  if(error || !profile){
+    say($("loginMsg"), "Signed in, but no artist profile is linked to this account yet.");
+    await sb.auth.signOut(); $("loginShell").style.display = "block"; return;
+  }
+  artistId = profile.artist_id;
+  $("artistName").textContent = ARTISTS[artistId] || artistId;
+  $("viewPage").href = artistId + ".html";
+  $("loginShell").style.display = "none"; $("manager").style.display = "block";
+  await load();
+}
+
+/* ---------- load + merge (same rules the public pages use) ---------- */
+async function load(){
+  say($("mgrMsg"), "Loading your photos…");
+  let base = {};
+  try{ const r = await fetch("portfolio.json"); if(r.ok) base = await r.json(); }catch(e){}
+  const staticItems = base[artistId] || [];
+  const { data: rows, error } = await sb.from("portfolio_photos").select("*").eq("artist_id", artistId).order("created_at", { ascending:false });
+  if(error){
+    say($("mgrMsg"), "Couldn't load edits (" + error.message + "). Has supabase_portfolio.sql been run?");
+    rows = [];
+  } else { say($("mgrMsg"), ""); }
+  const bySrc = {}; (rows || []).forEach(r => bySrc[r.src] = r);
+  const staticSet = new Set(staticItems.map(p => p.file));
+
+  const fromStatic = staticItems.map(p => {
+    const r = bySrc[p.file];
+    return { src:p.file, isStatic:true, caption: r ? r.caption : "", featured: r ? r.featured : !!p.featured, hidden: r ? r.hidden : false, id: r ? r.id : null };
+  });
+  const uploads = (rows || []).filter(r => !staticSet.has(r.src)).map(r => ({ src:r.src, isStatic:false, caption:r.caption, featured:r.featured, hidden:r.hidden, id:r.id, storage_path:r.storage_path }));
+  items = [...uploads, ...fromStatic];
+  render();
+}
+
+function order(list){ return [...list.filter(i => i.featured), ...list.filter(i => !i.featured)]; }
+
+function render(){
+  const visible = order(items.filter(i => !i.hidden));
+  const removed = items.filter(i => i.hidden);
+  $("count").textContent = visible.length + " photo" + (visible.length === 1 ? "" : "s") + " on your page";
+  const grid = $("grid"); grid.innerHTML = "";
+  if(!visible.length){ const p = document.createElement("p"); p.className = "empty"; p.textContent = "No photos yet. Use “Add photos” to upload your first one."; grid.appendChild(p); }
+  visible.forEach(it => {
+    const card = document.createElement("div"); card.className = "card";
+    const th = document.createElement("div"); th.className = "thumb";
+    const img = document.createElement("img"); img.src = it.src; img.alt = it.caption || "Portfolio photo"; img.loading = "lazy"; th.appendChild(img);
+    if(it.featured){ const b = document.createElement("span"); b.className = "badge"; b.textContent = "FEATURED"; th.appendChild(b); }
+    const cap = document.createElement("div"); cap.className = "cap"; cap.textContent = it.caption || "No caption";
+    const act = document.createElement("div"); act.className = "actions";
+    const e = document.createElement("button"); e.type = "button"; e.className = "btn btn-ghost btn-sm"; e.textContent = "Edit"; e.addEventListener("click", () => openEdit(it));
+    const d = document.createElement("button"); d.type = "button"; d.className = "btn btn-danger btn-sm"; d.textContent = "Remove"; d.addEventListener("click", () => removeItem(it));
+    act.append(e, d); card.append(th, cap, act); grid.appendChild(card);
+  });
+  const wrap = $("removedWrap"), rg = $("removedGrid"); rg.innerHTML = "";
+  wrap.style.display = removed.length ? "block" : "none";
+  $("removedSummary").textContent = "Removed photos (" + removed.length + ")";
+  removed.forEach(it => {
+    const m = document.createElement("div"); m.className = "mini";
+    const img = document.createElement("img"); img.src = it.src; img.alt = "Removed photo"; img.loading = "lazy";
+    const b = document.createElement("button"); b.type = "button"; b.className = "btn btn-ghost btn-sm"; b.textContent = "Restore"; b.addEventListener("click", () => restoreItem(it));
+    m.append(img, b); rg.appendChild(m);
+  });
+}
+
+/* ---------- save helpers ---------- */
+// Static photos have no row until the artist changes something; upsert creates/updates it.
+async function saveState(it, patch){
+  const next = Object.assign({}, it, patch);
+  if(it.id){
+    const { error } = await sb.from("portfolio_photos").update({ caption:next.caption, featured:next.featured, hidden:next.hidden }).eq("id", it.id);
+    return { error, next };
+  }
+  const { data, error } = await sb.from("portfolio_photos")
+    .upsert({ artist_id:artistId, src:it.src, caption:next.caption, featured:next.featured, hidden:next.hidden }, { onConflict:"artist_id,src" })
+    .select().single();
+  if(data) next.id = data.id;
+  return { error, next };
+}
+function replaceItem(oldIt, newIt){ items = items.map(i => i === oldIt ? newIt : i); }
+
+/* ---------- edit ---------- */
+let editing = null;
+function openEdit(it){
+  editing = it;
+  $("editPreview").src = it.src; $("editCaption").value = it.caption || ""; $("editFeatured").checked = !!it.featured;
+  $("editModal").classList.add("open"); $("editCaption").focus();
+}
+function closeEdit(){ $("editModal").classList.remove("open"); editing = null; }
+$("editCancel").addEventListener("click", closeEdit);
+$("editModal").addEventListener("click", e => { if(e.target === $("editModal")) closeEdit(); });
+document.addEventListener("keydown", e => { if(e.key === "Escape") closeEdit(); });
+$("editSave").addEventListener("click", async () => {
+  if(!editing) return;
+  const it = editing; $("editSave").disabled = true;
+  const { error, next } = await saveState(it, { caption: $("editCaption").value.trim(), featured: $("editFeatured").checked });
+  $("editSave").disabled = false;
+  if(error){ say($("mgrMsg"), "Couldn't save: " + error.message); closeEdit(); return; }
+  replaceItem(it, next); closeEdit(); render(); say($("mgrMsg"), "Saved.", true);
+});
+
+/* ---------- remove / restore ---------- */
+async function removeItem(it){
+  if(!confirm("Remove this photo from your portfolio?" + (it.isStatic ? " You can restore it later." : " Uploaded photos are deleted for good."))) return;
+  if(it.isStatic){
+    const { error, next } = await saveState(it, { hidden:true });
+    if(error){ say($("mgrMsg"), "Couldn't remove: " + error.message); return; }
+    replaceItem(it, next);
+  } else {
+    if(it.storage_path){ await sb.storage.from(BUCKET).remove([it.storage_path]); }
+    const { error } = await sb.from("portfolio_photos").delete().eq("id", it.id);
+    if(error){ say($("mgrMsg"), "Couldn't remove: " + error.message); return; }
+    items = items.filter(i => i !== it);
+  }
+  render(); say($("mgrMsg"), "Photo removed.", true);
+}
+async function restoreItem(it){
+  const { error, next } = await saveState(it, { hidden:false });
+  if(error){ say($("mgrMsg"), "Couldn't restore: " + error.message); return; }
+  replaceItem(it, next); render(); say($("mgrMsg"), "Photo restored.", true);
+}
+
+/* ---------- upload (resize in the browser first) ---------- */
+$("pickBtn").addEventListener("click", () => $("fileInput").click());
+$("fileInput").addEventListener("change", async e => {
+  const files = [...e.target.files]; e.target.value = "";
+  if(!files.length) return;
+  $("pickBtn").disabled = true;
+  let ok = 0, fail = 0;
+  for(let i = 0; i < files.length; i++){
+    say($("mgrMsg"), "Uploading " + (i + 1) + " of " + files.length + "…");
+    try{ await uploadOne(files[i]); ok++; }catch(err){ fail++; console.error(err); say($("mgrMsg"), "Upload problem: " + (err.message || err)); }
+  }
+  $("pickBtn").disabled = false;
+  await load();
+  say($("mgrMsg"), ok + " photo" + (ok === 1 ? "" : "s") + " added" + (fail ? ", " + fail + " failed" : "") + ".", !fail);
+});
+
+async function toJpeg(file){
+  if(!/^image\/(jpeg|png|webp)$/.test(file.type)) throw new Error(file.name + " isn't a JPG, PNG or WebP image.");
+  const bmp = await createImageBitmap(file);
+  const scale = Math.min(1, MAX_SIDE / Math.max(bmp.width, bmp.height));
+  const w = Math.round(bmp.width * scale), h = Math.round(bmp.height * scale);
+  const canvas = document.createElement("canvas"); canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, h); ctx.drawImage(bmp, 0, 0, w, h);
+  const blob = await new Promise(res => canvas.toBlob(res, "image/jpeg", 0.85));
+  if(!blob) throw new Error("Couldn't process " + file.name);
+  return blob;
+}
+async function uploadOne(file){
+  const blob = await toJpeg(file);
+  const path = artistId + "/" + Date.now() + "-" + Math.random().toString(36).slice(2, 8) + ".jpg";
+  const up = await sb.storage.from(BUCKET).upload(path, blob, { contentType:"image/jpeg", cacheControl:"31536000" });
+  if(up.error) throw up.error;
+  const { data: pub } = sb.storage.from(BUCKET).getPublicUrl(path);
+  const ins = await sb.from("portfolio_photos").insert({ artist_id:artistId, src:pub.publicUrl, storage_path:path });
+  if(ins.error){ await sb.storage.from(BUCKET).remove([path]); throw ins.error; }
+}
+
+start();
+</script>
+</body>
+</html>

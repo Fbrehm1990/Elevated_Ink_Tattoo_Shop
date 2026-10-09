@@ -92,6 +92,26 @@
   .team-photo-frame span{font-size:13px; font-weight:600; letter-spacing:0.02em;}
   img.team-photo-frame{object-fit:cover; border:2px solid var(--ink);}
   .social-row{display:flex; gap:12px; flex-wrap:wrap;}
+
+  /* ---------- SPOTLIGHT SLIDESHOW ---------- */
+  .spotlight{display:grid; grid-template-columns:minmax(0,520px) 1fr; gap:44px; align-items:center;}
+  .spot-frame{position:relative; aspect-ratio:5/6; border:2px solid var(--ink); background:var(--paper-alt); overflow:hidden; touch-action:pan-y;}
+  .spot-frame:focus-visible{outline:3px solid var(--gold); outline-offset:3px;}
+  .spot-track{display:flex; height:100%; transition:transform .55s ease;}
+  .spot-slide{flex:0 0 100%; height:100%; margin:0;}
+  .spot-slide img{width:100%; height:100%; object-fit:cover; display:block;}
+  .spot-slide.contain img{object-fit:contain;}
+  .spot-btn{position:absolute; top:50%; transform:translateY(-50%); width:42px; height:54px; border:2px solid var(--ink); background:rgba(23,19,14,.78); color:var(--ink); font-size:24px; cursor:pointer; line-height:1;}
+  .spot-btn:hover{background:var(--ink); color:var(--paper);}
+  .spot-prev{left:10px;} .spot-next{right:10px;}
+  .spot-dots{display:flex; gap:10px; margin-bottom:18px;}
+  .spot-dot{width:34px; height:6px; border:0; padding:0; background:var(--line); cursor:pointer;}
+  .spot-dot.active{background:var(--red-bright);}
+  .spot-side h3{font-size:clamp(22px,2.6vw,30px); margin-bottom:10px;}
+  .spot-side p{color:var(--ink-soft); font-size:16px; margin:0 0 14px; max-width:460px;}
+  .spot-link{display:inline-block; font-weight:600; font-size:14px; color:var(--ink); margin-bottom:24px; border-bottom:2px solid var(--red);}
+  .spot-link:empty{display:none;}
+  .spot-side .social-row{margin-top:6px;}
   .social-link{
     display:inline-flex; align-items:center; gap:8px; font-weight:600; font-size:13px; color:var(--ink-soft);
     text-decoration:none; border:2px solid var(--ink); padding:8px 14px; transition:all .2s;
@@ -288,6 +308,8 @@
     .btn{padding:13px 20px; font-size:13px;}
     section{padding:48px 0;}
     .sec-head{margin-bottom:30px;}
+    .spotlight{grid-template-columns:1fr; gap:22px;}
+    .spot-btn{width:36px; height:46px;}
     .team-photo-frame{aspect-ratio:4/3; margin-bottom:18px;}
     .team-photo-frame svg{width:36px; height:36px;}
     .social-link{font-size:12px; padding:7px 12px;}
@@ -345,19 +367,21 @@
 <section id="team-photo">
   <div class="wrap">
     <div class="sec-head">
-      <h2>Meet the Team</h2>
+      <h2>Spotlight</h2>
+      <p>Highlights from the shop.</p>
     </div>
-    <!--
-      Swap the placeholder below for a real photo once you have one:
-        <img src="team-photo.jpg" alt="The Elevated Ink team" class="team-photo-frame">
-      Just drop team-photo.jpg in this same folder and keep the class name
-      so it keeps the same border and sizing.
-    -->
-    <div class="team-photo-frame">
-      <svg viewBox="0 0 48 48"><rect x="4" y="14" width="40" height="28" rx="3"/><circle cx="24" cy="28" r="8"/><path d="M17 14 L20 9 H28 L31 14"/></svg>
-      <span>Team photo coming soon</span>
-    </div>
-    <div class="social-row">
+    <div class="spotlight">
+      <div class="spot-frame" id="spotFrame" tabindex="0" aria-roledescription="carousel" aria-label="Spotlight photos">
+        <div class="spot-track" id="spotTrack"></div>
+        <button class="spot-btn spot-prev" id="spotPrev" type="button" aria-label="Previous photo">&lsaquo;</button>
+        <button class="spot-btn spot-next" id="spotNext" type="button" aria-label="Next photo">&rsaquo;</button>
+      </div>
+      <div class="spot-side">
+        <div class="spot-dots" id="spotDots" role="tablist" aria-label="Choose a photo"></div>
+        <h3 id="spotTitle"></h3>
+        <p id="spotText"></p>
+        <a href="#about" class="spot-link" id="spotLink"></a>
+        <div class="social-row">
       <a href="https://www.facebook.com/p/Elevated-Ink-61583962552746/" class="social-link" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M14 8.5h1.8V5.3h-1.8c-1.9 0-3.1 1.2-3.1 3.1v1.8H8.6v3h2.3V19h3v-5.8h2l.4-3h-2.4V8.9c0-.2.1-.4.4-.4z"/></svg>
         Facebook
@@ -366,6 +390,8 @@
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.3" cy="6.7" r="1.1" fill="currentColor" stroke="none"/></svg>
         Instagram
       </a>
+    </div>
+      </div>
     </div>
   </div>
 </section>
@@ -511,14 +537,23 @@ if(navToggle && navLinksEl){
 }
 
 /* ---------- Gallery (real work in images/, credited per artist) ---------- */
+// Built-in featured photos: shown right away, and if portfolio.json / Supabase can't be reached.
 const GALLERY_FALLBACK = [
-  { artist:"tj", title:"Moth study", svg: svgMoth() },
-  { artist:"tj", title:"Mountain linework", svg: svgMountain() },
-  { artist:"austin", title:"Botanical piece", svg: svgBotanical() },
-  { artist:"austin", title:"Swallow pair", svg: svgSwallow() },
-  { artist:"ariana", title:"Rose in color", svg: svgRose() },
-  { artist:"makenzi", title:"Banner & dagger", svg: svgDagger() },
-  { artist:"aaron", title:"Koi & wave", svg: svgKoi() }
+  { artist:"tj", img:"images/portfolio/tj-016.jpg" },
+  { artist:"tj", img:"images/portfolio/tj-020.jpg" },
+  { artist:"tj", img:"images/portfolio/tj-023.jpg" },
+  { artist:"austin", img:"images/portfolio/austin-001.jpg" },
+  { artist:"austin", img:"images/portfolio/austin-016.jpg" },
+  { artist:"austin", img:"images/portfolio/austin-018.jpg" },
+  { artist:"ariana", img:"images/portfolio/ariana-001.jpg" },
+  { artist:"ariana", img:"images/portfolio/ariana-021.jpg" },
+  { artist:"ariana", img:"images/portfolio/ariana-022.jpg" },
+  { artist:"makenzi", img:"images/portfolio/makenzi-001.jpg" },
+  { artist:"makenzi", img:"images/portfolio/makenzi-002.jpg" },
+  { artist:"makenzi", img:"images/portfolio/makenzi-019.jpg" },
+  { artist:"aaron", img:"images/portfolio/aaron-002.jpg" },
+  { artist:"aaron", img:"images/portfolio/aaron-015.jpg" },
+  { artist:"aaron", img:"images/portfolio/aaron-017.jpg" }
 ];
 const DOUG_CARD = { artist:"doug", title:"Crane in flight", svg: svgCrane() };
 let GALLERY = [...GALLERY_FALLBACK, DOUG_CARD];
@@ -546,8 +581,8 @@ function renderGallery(filter){
     const card = document.createElement("a");
     card.className = "gcard";
     card.href = g.artist + ".html";
-    card.setAttribute("aria-label", g.title + " by " + ARTIST_NAMES[g.artist] + " - view portfolio");
-    card.innerHTML = (g.img ? `<img src="${g.img}" alt="${g.title} tattoo by ${ARTIST_NAMES[g.artist]}" loading="lazy">` : g.svg) + `<div class="tag"><span>${g.title}</span><b>${ARTIST_NAMES[g.artist]} &rarr;</b></div>`;
+    card.setAttribute("aria-label", "Tattoo by " + ARTIST_NAMES[g.artist] + " - view portfolio");
+    card.innerHTML = (g.img ? `<img src="${g.img}" alt="Tattoo by ${ARTIST_NAMES[g.artist]}" loading="lazy">` : g.svg) + `<div class="tag"><span>${ARTIST_NAMES[g.artist]}</span><b>View portfolio &rarr;</b></div>`;
     const im = card.querySelector("img"); if(im) im.addEventListener("error", () => card.remove());
     grid.appendChild(card);
   });
@@ -561,12 +596,78 @@ document.getElementById("galleryTabs").addEventListener("click", e => {
 });
 let activeFilter = "all";
 renderGallery("all");
-fetch("portfolio.json").then(r => r.ok ? r.json() : Promise.reject()).then(d => {
+const SB_URL = "https://bvsgrgdardumiabfewwr.supabase.co";
+const SB_KEY = "sb_publishable__Qic8J69dJyd76lnVw2m-A_OaF0R9nO";
+(async function loadFeatured(){
+  let base = {}, rows = [];
+  try{ const r = await fetch("portfolio.json"); if(r.ok) base = await r.json(); }catch(e){}
+  try{
+    const r = await fetch(SB_URL + "/rest/v1/portfolio_photos?select=artist_id,src,featured,hidden,created_at&order=created_at.desc", { headers:{ apikey: SB_KEY } });
+    if(r.ok) rows = await r.json();
+  }catch(e){}
   const feat = [];
-  ["tj","austin","ariana","makenzi","aaron"].forEach(a => (d[a] || []).filter(p => p.featured).forEach(p => feat.push({ artist:a, title:p.title, img:p.file })));
-  if(feat.length){ GALLERY = [...feat, DOUG_CARD]; renderGallery(activeFilter); }
-}).catch(() => {});
+  ["tj","austin","ariana","makenzi","aaron","doug"].forEach(a => {
+    const mine = rows.filter(r => r.artist_id === a);
+    const bySrc = {}; mine.forEach(r => bySrc[r.src] = r);
+    const staticItems = base[a] || [], staticSet = new Set(staticItems.map(p => p.file));
+    const uploads = mine.filter(r => !staticSet.has(r.src) && r.featured && !r.hidden).map(r => r.src);
+    const starters = staticItems.filter(p => { const r = bySrc[p.file]; return r ? (r.featured && !r.hidden) : p.featured; }).map(p => p.file);
+    [...uploads, ...starters].slice(0, 4).forEach(f => feat.push({ artist:a, img:f }));
+  });
+  if(feat.length){
+    const hasDoug = feat.some(f => f.artist === "doug");
+    GALLERY = hasDoug ? feat : [...feat, DOUG_CARD];
+    renderGallery(activeFilter);
+  }
+})();
 
+</script>
+
+<script>
+/* ---------- Spotlight slideshow ---------- */
+(function(){
+  const SLIDES = [
+    { img:"spotlight/team.jpg", fit:"contain", alt:"The Elevated Ink artists together at the shop", title:"The Elevated Ink team", text:"The artists behind the chair at Elevated Ink in Martinsburg, WV.", link:"#about", linkText:"Meet the artists \u2192" },
+    { img:"spotlight/tj-expo.jpg", alt:"TJ standing behind a table of Battlefield Tattoo Expo award plaques", title:"TJ at the Battlefield Tattoo Expo", text:"Nine awards, including Tattoo of the Day.", link:"tj.html", linkText:"See TJ\u2019s portfolio \u2192" },
+    { img:"spotlight/ariana-expo.jpg", alt:"Ariana holding a 1st place Best Large Color plaque at the Battlefield Tattoo Expo", title:"Ariana at the Battlefield Tattoo Expo", text:"Taking home 1st Place, Best Large Color.", link:"ariana.html", linkText:"See Ariana\u2019s portfolio \u2192" }
+  ];
+  const track = document.getElementById("spotTrack"), dots = document.getElementById("spotDots"), frame = document.getElementById("spotFrame");
+  const titleEl = document.getElementById("spotTitle"), textEl = document.getElementById("spotText"), linkEl = document.getElementById("spotLink");
+  let idx = 0, timer = null;
+  SLIDES.forEach((s, i) => {
+    const fig = document.createElement("figure");
+    fig.className = "spot-slide" + (s.fit === "contain" ? " contain" : "");
+    const im = document.createElement("img");
+    im.src = s.img; im.alt = s.alt; if(i > 0) im.loading = "lazy";
+    fig.appendChild(im); track.appendChild(fig);
+    const d = document.createElement("button");
+    d.type = "button"; d.className = "spot-dot"; d.setAttribute("aria-label", "Show photo " + (i + 1));
+    d.addEventListener("click", () => { go(i); restart(); });
+    dots.appendChild(d);
+  });
+  function go(i){
+    idx = (i + SLIDES.length) % SLIDES.length;
+    track.style.transform = "translateX(-" + (idx * 100) + "%)";
+    [...dots.children].forEach((d, k) => d.classList.toggle("active", k === idx));
+    const s = SLIDES[idx];
+    titleEl.textContent = s.title; textEl.textContent = s.text;
+    linkEl.textContent = s.linkText || ""; linkEl.href = s.link || "#";
+  }
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function stop(){ if(timer){ clearInterval(timer); timer = null; } }
+  function start(){ if(reduce || timer) return; timer = setInterval(() => go(idx + 1), 6000); }
+  function restart(){ stop(); start(); }
+  document.getElementById("spotPrev").addEventListener("click", () => { go(idx - 1); restart(); });
+  document.getElementById("spotNext").addEventListener("click", () => { go(idx + 1); restart(); });
+  frame.addEventListener("mouseenter", stop); frame.addEventListener("mouseleave", start);
+  frame.addEventListener("focusin", stop); frame.addEventListener("focusout", start);
+  frame.addEventListener("keydown", e => { if(e.key === "ArrowLeft"){ go(idx - 1); } if(e.key === "ArrowRight"){ go(idx + 1); } });
+  let x0 = null;
+  frame.addEventListener("touchstart", e => { x0 = e.touches[0].clientX; stop(); }, {passive:true});
+  frame.addEventListener("touchend", e => { if(x0 !== null){ const dx = e.changedTouches[0].clientX - x0; if(Math.abs(dx) > 40) go(idx + (dx < 0 ? 1 : -1)); } x0 = null; start(); });
+  document.addEventListener("visibilitychange", () => document.hidden ? stop() : start());
+  go(0); start();
+})();
 </script>
 
 </body>

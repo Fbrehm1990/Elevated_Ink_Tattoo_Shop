@@ -106,3 +106,31 @@ message about RLS policies, one of these two files likely hasn't been applied ye
 - **Logo size/opacity on the page background**: `background-size` and the
   `logo-watermark.png` file itself (baked-in opacity, not CSS) in the `body` rule
   near the top of each page's `<style>` block.
+
+
+## Spotlight slideshow (homepage)
+
+The first photo section on `index.html` is a slideshow. Slides are listed in the
+`SLIDES` array in the last `<script>` block of `index.html`; each one points at a
+file in `spotlight/`. To add or swap a slide, drop the photo into `spotlight/` and
+add or edit a line in that array (image, alt text, title, caption, link).
+
+## Artist portfolio manager
+
+`portfolio-manager.html` (linked from the scheduler as "My Portfolio") lets a signed-in
+artist add, edit, feature, remove and restore photos on their own portfolio page. It uses
+the same Supabase sign-in as the scheduler, so an artist already signed in there does not
+need to sign in again.
+
+**One-time setup:** run `supabase_portfolio.sql` in the Supabase SQL Editor. It creates the
+`portfolio_photos` table and a public `portfolio` storage bucket, with rules so each artist
+can only change their own photos (matched through `artist_profiles`, like the scheduler).
+
+How photos are combined on the public pages:
+- `portfolio.json` + `images/portfolio/` hold the starter photos (imported from Instagram).
+- Anything an artist changes in the manager is stored in Supabase and layered on top:
+  uploads are added, "removed" starter photos are hidden (restorable), captions and
+  "featured" flags override the starter values.
+- If Supabase can't be reached, the pages fall back to the starter set.
+- Featured photos show first on the artist page, and up to 4 per artist appear in the
+  homepage gallery.

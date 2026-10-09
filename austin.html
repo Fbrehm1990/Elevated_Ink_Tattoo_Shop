@@ -240,7 +240,7 @@ function svgSwallow(){return svgWrap(`<path d="M70 200 C100 160 140 170 150 200 
 
 const ARTIST = "austin";
 const ARTIST_NAME = "Austin";
-const FALLBACK = [];
+const FALLBACK = [{ file:"images/portfolio/austin-001.jpg", caption:"", featured:true }, { file:"images/portfolio/austin-016.jpg", caption:"", featured:true }, { file:"images/portfolio/austin-018.jpg", caption:"", featured:true }];
 const grid = document.getElementById("portfolioGrid");
 let current = [];
 function renderPortfolio(items){
@@ -252,7 +252,8 @@ function renderPortfolio(items){
     card.className = "gcard";
     if(p.file){
       card.classList.add("zoomable");
-      card.innerHTML = `<img src="${p.file}" alt="${p.title} tattoo by ${ARTIST_NAME}" loading="lazy"><div class="tag"><span>${p.title}</span></div>`;
+      card.innerHTML = `<img src="${p.file}" alt="Tattoo by ${ARTIST_NAME}" loading="lazy"><div class="tag"><span></span></div>`;
+      card.querySelector(".tag span").textContent = p.caption || ARTIST_NAME;
       card.addEventListener("click", () => openLightbox(current.indexOf(p)));
       card.querySelector("img").addEventListener("error", () => card.remove());
     } else {
@@ -261,11 +262,27 @@ function renderPortfolio(items){
     grid.appendChild(card);
   });
 }
-fetch("portfolio.json").then(r => r.ok ? r.json() : Promise.reject()).then(d => {
-  const items = d[ARTIST] || [];
-  const sorted = [...items.filter(i => i.featured), ...items.filter(i => !i.featured)];
-  renderPortfolio(sorted.length ? sorted : FALLBACK);
-}).catch(() => renderPortfolio(FALLBACK));
+const SB_URL = "https://bvsgrgdardumiabfewwr.supabase.co";
+const SB_KEY = "sb_publishable__Qic8J69dJyd76lnVw2m-A_OaF0R9nO";
+// Photos = the starter set in portfolio.json, with the artist's own edits (captions, featured,
+// removed) and uploads from Supabase layered on top. If Supabase is unreachable, the starter set shows.
+async function loadPortfolio(){
+  let base = {};
+  try{ const r = await fetch("portfolio.json"); if(r.ok) base = await r.json(); }catch(e){}
+  const staticItems = base[ARTIST] || [];
+  let rows = [];
+  try{
+    const r = await fetch(SB_URL + "/rest/v1/portfolio_photos?artist_id=eq." + ARTIST + "&select=src,caption,featured,hidden,created_at&order=created_at.desc", { headers:{ apikey: SB_KEY } });
+    if(r.ok) rows = await r.json();
+  }catch(e){}
+  const bySrc = {}; rows.forEach(r => bySrc[r.src] = r);
+  const staticSet = new Set(staticItems.map(p => p.file));
+  const fromStatic = staticItems.map(p => { const r = bySrc[p.file]; return { file:p.file, post:p.post, caption: r ? r.caption : "", featured: r ? r.featured : !!p.featured, hidden: r ? r.hidden : false }; }).filter(i => !i.hidden);
+  const uploads = rows.filter(r => !staticSet.has(r.src) && !r.hidden).map(r => ({ file:r.src, caption:r.caption, featured:r.featured }));
+  const all = [...uploads, ...fromStatic];
+  return [...all.filter(i => i.featured), ...all.filter(i => !i.featured)];
+}
+loadPortfolio().then(items => renderPortfolio(items.length ? items : FALLBACK)).catch(() => renderPortfolio(FALLBACK));
 
 const lb = document.getElementById("lightbox"), lbImg = document.getElementById("lbImg"), lbMeta = document.getElementById("lbMeta");
 let lbIdx = 0;
@@ -273,8 +290,9 @@ function openLightbox(i){
   if(i < 0 || !current.length) return;
   lbIdx = (i + current.length) % current.length;
   const p = current[lbIdx];
-  lbImg.src = p.file; lbImg.alt = p.title + " tattoo by " + ARTIST_NAME;
-  lbMeta.innerHTML = p.title + " &middot; " + (lbIdx + 1) + " of " + current.length + (p.post ? ' &middot; <a href="' + p.post + '" target="_blank" rel="noopener">View original post</a>' : "");
+  lbImg.src = p.file; lbImg.alt = p.caption || ("Tattoo by " + ARTIST_NAME);
+  lbMeta.textContent = (p.caption || ARTIST_NAME) + " \u00b7 " + (lbIdx + 1) + " of " + current.length;
+  if(p.post){ const link = document.createElement("a"); link.href = p.post; link.target = "_blank"; link.rel = "noopener"; link.textContent = "View original post"; lbMeta.append(" \u00b7 ", link); }
   lb.classList.add("open");
 }
 function closeLightbox(){ lb.classList.remove("open"); }
