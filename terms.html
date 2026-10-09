@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terms of Service — Elevated Ink Tattoo Co.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#17130e;
+    --paper-alt:#221c14;
+    --ink:#ece0c3;
+    --ink-soft:#b9ab8c;
+    --red:#c14a3a;
+    --red-bright:#d65b46;
+    --green:#2f7d55;
+    --gold:#d4a94f;
+    --line:#443a2c;
+    --max:1180px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background-color:var(--paper); color:var(--ink); font-family:'Libre Franklin',sans-serif; font-size:16px; line-height:1.6;
+    background-image:url('logo-watermark.png');
+    background-repeat:no-repeat;
+    background-position:center center;
+    background-attachment:fixed;
+    background-size:min(85vw, 1000px) auto;
+  }
+  a{color:inherit;}
+  img{max-width:100%; display:block;}
+  .wrap{max-width:var(--max); margin:0 auto; padding:0 28px;}
+  h1,h2,h3{margin:0; font-family:'Alfa Slab One',serif; font-weight:400; line-height:1.08;}
+
+  header{position:sticky; top:0; z-index:50; background:var(--paper); border-bottom:3px solid var(--ink);}
+  nav.wrap{display:flex; align-items:center; justify-content:space-between; height:76px; position:relative;}
+  .brand{font-family:'Alfa Slab One',serif; font-size:22px; color:var(--ink); text-decoration:none; display:flex; align-items:center;}
+  .brand-logo{height:46px; width:auto; display:block;}
+  .navlinks{display:flex; gap:32px; list-style:none; margin:0; padding:0;}
+  .navlinks a{text-decoration:none; font-weight:600; font-size:14px; color:var(--ink-soft); transition:color .2s; padding-bottom:4px; border-bottom:2px solid transparent;}
+  .navlinks a:hover{color:var(--ink); border-color:var(--red);}
+  .nav-actions{display:flex; align-items:center; gap:12px;}
+  .nav-icon-btn{
+    display:flex; align-items:center; justify-content:center; width:40px; height:40px; flex-shrink:0;
+    border:2px solid var(--ink); background:transparent; color:var(--ink); text-decoration:none; transition:all .2s;
+  }
+  .nav-icon-btn svg{width:17px; height:17px; stroke:currentColor; fill:none; stroke-width:1.8;}
+  .nav-icon-btn:hover{background:var(--ink); color:var(--paper);}
+  .navtoggle{display:none; background:none; border:none; color:var(--ink); font-size:26px; cursor:pointer;}
+  .navlinks.open{
+    display:flex !important; position:absolute; top:76px; left:0; right:0;
+    flex-direction:column; gap:0; background:var(--paper); border-bottom:3px solid var(--ink);
+    padding:6px 28px 18px; z-index:60;
+  }
+  .navlinks.open a{display:block; padding:13px 0; border-bottom:1px solid var(--line);}
+
+  .legal-content{max-width:760px; margin:0 auto; padding:70px 0;}
+  .legal-content h1{font-size:clamp(28px,4vw,40px); margin-bottom:8px;}
+  .legal-content .updated{color:var(--ink-soft); font-size:13px; margin-bottom:36px; display:block;}
+  .legal-content h2{font-family:'Alfa Slab One',serif; font-size:19px; margin:34px 0 12px; font-weight:400;}
+  .legal-content p{color:var(--ink-soft); font-size:15px; margin-bottom:14px;}
+  .legal-content ul{color:var(--ink-soft); font-size:15px; margin:0 0 14px; padding-left:22px;}
+  .legal-content li{margin-bottom:6px;}
+  .legal-content a{color:var(--ink); text-decoration:underline;}
+  .legal-content a:hover{color:var(--gold);}
+  .legal-nav-row{display:flex; gap:18px; flex-wrap:wrap; margin-top:40px; padding-top:24px; border-top:1px solid var(--line);}
+  .legal-nav-row a{font-weight:600; font-size:13px; color:var(--ink-soft); text-decoration:underline;}
+  .legal-nav-row a:hover{color:var(--ink);}
+
+  footer{padding:44px 0;}
+  .foot-inner{display:flex; justify-content:space-between; flex-wrap:wrap; gap:20px; align-items:center;}
+  .foot-meta{font-size:12.5px; color:var(--ink-soft); display:flex; gap:22px; flex-wrap:wrap; align-items:center;}
+  .foot-meta a{color:var(--ink-soft); text-decoration:underline;}
+  .foot-meta a:hover{color:var(--ink);}
+  .foot-legal{width:100%; display:flex; gap:16px; flex-wrap:wrap; margin-top:14px; padding-top:14px; border-top:1px solid var(--line); font-size:11.5px;}
+  .foot-legal a{color:var(--ink-soft); text-decoration:underline;}
+  .foot-legal a:hover{color:var(--ink);}
+
+  @media(max-width:920px){
+    .navlinks{display:none;}
+    .navtoggle{display:block;}
+  }
+  @media(max-width:600px){
+    .wrap{padding:0 18px;}
+    .brand-logo{height:36px;}
+    .nav-icon-btn{width:34px; height:34px;}
+    .nav-icon-btn svg{width:15px; height:15px;}
+    .legal-content{padding:46px 0;}
+    .foot-inner{flex-direction:column; align-items:flex-start;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="wrap">
+    <a href="index.html#top" class="brand"><img src="logo.png" alt="Elevated Ink" class="brand-logo"></a>
+    <ul class="navlinks">
+      <li><a href="index.html#about">Artists</a></li>
+      <li><a href="index.html#gallery">Gallery</a></li>
+      <li><a href="index.html#faq">FAQ</a></li>
+      <li><a href="index.html#contact">Contact</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="scheduler.html" class="nav-icon-btn" aria-label="Artist sign-in">
+        <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      </a>
+      <button class="navtoggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">☰</button>
+    </div>
+  </nav>
+</header>
+
+<div class="wrap">
+  <article class="legal-content">
+    <h1>Terms of Service</h1>
+    <span class="updated">Last updated: September 2026</span>
+
+    <p>These Terms of Service ("Terms") govern your use of the Elevated Ink Tattoo Co. website (the "Site"). By using the Site, you agree to these Terms. If you don't agree, please don't use the Site.</p>
+
+    <h2>1. What This Site Is</h2>
+    <p>This Site is an informational and portfolio site for Elevated Ink Tattoo Co. It does not process online bookings or payments. Appointments are arranged directly with an individual artist, typically by messaging them on Instagram, and are confirmed between you and that artist rather than through this Site.</p>
+
+    <h2>2. Age Requirement for Tattoo Services</h2>
+    <p>Elevated Ink Tattoo Co. only provides tattoo services to individuals who are 18 years of age or older and can present valid government-issued photo ID at the time of the appointment. We do not tattoo minors under any circumstances, including with parental consent. This Site itself has no age restriction to browse.</p>
+
+    <h2>3. Appointments, Deposits &amp; Cancellations</h2>
+    <p>A deposit is required to hold your appointment time and is applied toward the final price of your tattoo. Deposits are non-refundable if you no-show or cancel with less than 48 hours' notice. Exact deposit amounts, scheduling, and rescheduling are handled directly by your artist &mdash; see our <a href="index.html#faq">FAQ</a> for the general policy, and confirm specifics with your artist when booking.</p>
+
+    <h2>4. Intellectual Property</h2>
+    <p>The content on this Site &mdash; including the Elevated Ink logo, page design, artist bios, and portfolio artwork &mdash; is the property of Elevated Ink Tattoo Co. and its individual artists. Please don't copy, reproduce, or reuse this content without our written permission.</p>
+
+    <h2>5. Third-Party Links &amp; Social Media</h2>
+    <p>This Site links to Instagram and Facebook so you can view artists' work and reach out to them. We aren't responsible for the content, policies, or practices of those platforms &mdash; your use of them is governed by their own terms and privacy policies.</p>
+
+    <h2>6. No Guarantees on Artistic or Healing Outcomes</h2>
+    <p>Tattooing is an inherently individual process. Results, healing, and how a tattoo settles into the skin vary from person to person based on factors outside our control, including skin type, aftercare, and individual healing response. Nothing on this Site is a guarantee of a specific outcome.</p>
+
+    <h2>7. Site Provided "As Is"</h2>
+    <p>This Site is provided on an "as is" and "as available" basis, without warranties of any kind, express or implied. We don't guarantee the Site will be error-free, uninterrupted, or available at all times.</p>
+
+    <h2>8. Limitation of Liability</h2>
+    <p>To the fullest extent permitted by law, Elevated Ink Tattoo Co. is not liable for any indirect, incidental, or consequential damages arising from your use of this Site.</p>
+
+    <h2>9. Governing Law</h2>
+    <p>These Terms are governed by the laws of the State of West Virginia, without regard to conflict-of-law principles.</p>
+
+    <h2>10. Changes to These Terms</h2>
+    <p>We may update these Terms from time to time. The "Last updated" date at the top of this page reflects the most recent revision.</p>
+
+    <h2>11. Contact Us</h2>
+    <p>Questions about these Terms? Reach us at <a href="mailto:elevatedink2025@gmail.com">elevatedink2025@gmail.com</a> or (681) 575-0008.</p>
+
+    <div class="legal-nav-row">
+      <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="accessibility.html">Accessibility Statement</a>
+    </div>
+  </article>
+</div>
+
+<footer id="contact">
+  <div class="wrap foot-inner">
+    <a href="index.html#top" class="brand"><img src="logo.png" alt="Elevated Ink" class="brand-logo"></a>
+    <div class="foot-meta">
+      <span>183 Monroe St. Martinsburg, WV 25404</span>
+      <span>(681) 575-0008</span>
+      <a href="mailto:elevatedink2025@gmail.com">elevatedink2025@gmail.com</a>
+    </div>
+    <div class="foot-legal">
+      <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="accessibility.html">Accessibility Statement</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+const navToggle = document.getElementById("navToggle");
+const navLinksEl = document.querySelector(".navlinks");
+if(navToggle && navLinksEl){
+  navToggle.addEventListener("click", () => {
+    const open = navLinksEl.classList.toggle("open");
+    navToggle.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  navLinksEl.querySelectorAll("a").forEach(a => a.addEventListener("click", () => {
+    navLinksEl.classList.remove("open");
+    navToggle.setAttribute("aria-expanded", "false");
+  }));
+}
+</script>
+
+</body>
+</html>

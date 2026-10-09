@@ -19,6 +19,9 @@ the direct URL can reach it.
 | `makenzi.html` | Makenzi — bio, portfolio, socials, "Message to Book" |
 | `aaron.html` | Aaron — bio, portfolio, socials, "Message to Book" |
 | `doug.html` | Doug — bio, portfolio, socials, "Message to Book" |
+| `terms.html` | Terms of Service |
+| `privacy.html` | Privacy Policy |
+| `accessibility.html` | Accessibility Statement |
 | `logo.png` | Shop logo, processed to a transparent light-ink mark for the dark background |
 | `logo-watermark.png` | Same logo at higher opacity — the large fixed background behind every page |
 | `supabase_staff_policies.sql` | RLS policies for staff to view/update/cancel/block their own bookings — **run first** |

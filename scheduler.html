@@ -155,8 +155,10 @@
   .cal-day:hover{background:#f7f4ec;}
   .cal-day.pad{cursor:default; background:#f5f2ea;}
   .cal-day.pad:hover{background:#f5f2ea;}
-  .cal-day.closed{cursor:default; background:#f5f2ea; opacity:0.55;}
-  .cal-day.closed:hover{background:#f5f2ea;}
+  .cal-day.off-day{background:#f5f2ea;}
+  .cal-day.off-day .cal-daynum{color:#8a7f6b;}
+  .cal-day.off-day:hover{background:#ece6d8;}
+  .day-off-note{font-size:12px; color:#7a6f5c; background:#faf3e2; border-left:3px solid var(--gold); padding:8px 10px; margin:0 0 14px;}
   .cal-day.today{box-shadow:inset 0 0 0 2px var(--gold);}
   .cal-day.selected{box-shadow:inset 0 0 0 2px var(--red); background:#fdf4f2;}
   .cal-daynum{font-weight:700; font-size:13px; color:#221c14;}
@@ -247,6 +249,9 @@
   footer{padding:44px 0;}
   .foot-inner{display:flex; justify-content:space-between; flex-wrap:wrap; gap:20px; align-items:center;}
   .foot-meta{font-size:12.5px; color:var(--ink-soft); display:flex; gap:22px; flex-wrap:wrap; align-items:center;}
+  .foot-legal{width:100%; display:flex; gap:16px; flex-wrap:wrap; margin-top:14px; padding-top:14px; border-top:1px solid var(--line); font-size:11.5px;}
+  .foot-legal a{color:var(--ink-soft); text-decoration:underline;}
+  .foot-legal a:hover{color:var(--ink);}
   .foot-meta a{color:var(--ink-soft); text-decoration:underline;}
   .foot-meta a:hover{color:var(--ink);}
 
@@ -475,6 +480,11 @@
       <span>(681) 575-0008</span>
       <a href="mailto:elevatedink2025@gmail.com">elevatedink2025@gmail.com</a>
     </div>
+    <div class="foot-legal">
+      <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="accessibility.html">Accessibility Statement</a>
+    </div>
   </div>
 </footer>
 
@@ -513,7 +523,7 @@ function generateDailyTimes(){
   return times;
 }
 const DAILY_TIMES = generateDailyTimes(); // e.g. "11:00 AM", "11:15 AM", ... "7:00 PM"
-const STUDIO_DAYS = [2,3,4,5,6]; // Tue(2)-Sat(6) open, Sun/Mon closed
+const STUDIO_DAYS = [2,3,4,5,6]; // Tue(2)-Sat(6) are the regular days; Sun/Mon are off days that can still be booked if needed
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const DOW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 
@@ -683,7 +693,7 @@ function renderCalendarGrid(){
 
     const cell = document.createElement("div");
     cell.className = "cal-day"
-      + (isStudioDay ? "" : " closed")
+      + (isStudioDay ? "" : " off-day")
       + (key === todayKey ? " today" : "")
       + (key === selectedDate ? " selected" : "");
 
@@ -705,9 +715,7 @@ function renderCalendarGrid(){
 
     cell.innerHTML = `<span class="cal-daynum">${dayNum}</span><div class="cal-day-events">${eventsHtml}</div>`;
 
-    if(isStudioDay){
-      cell.addEventListener("click", () => openDayModal(key));
-    }
+    cell.addEventListener("click", () => openDayModal(key));
     grid.appendChild(cell);
   }
 }
@@ -790,11 +798,15 @@ function renderDayModal(){
   const blocksToday = calBlocksByDate[selectedDate] || {};
   const groups = groupDayItems(bookingsToday, blocksToday);
 
+  const offDayNote = STUDIO_DAYS.includes(dateObj.getDay())
+    ? ""
+    : `<p class="day-off-note">Normally closed — appointments here are an exception to the regular schedule.</p>`;
+
   const listEl = document.getElementById("dayModalList");
   if(groups.length === 0){
-    listEl.innerHTML = `<p class="empty-note">Nothing booked or blocked yet.</p>`;
+    listEl.innerHTML = offDayNote + `<p class="empty-note">Nothing booked or blocked yet.</p>`;
   } else {
-    listEl.innerHTML = groups.map(g => {
+    listEl.innerHTML = offDayNote + groups.map(g => {
       const idsAttr = g.ids.join(",");
       if(g.type === "booking"){
         const notePreview = g.note ? " · " + (g.note.length > 44 ? g.note.slice(0, 44) + "…" : g.note) : "";
