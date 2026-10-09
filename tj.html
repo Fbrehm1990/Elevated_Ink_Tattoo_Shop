@@ -252,7 +252,7 @@ function renderPortfolio(items){
     card.className = "gcard";
     if(p.file){
       card.classList.add("zoomable");
-      card.innerHTML = `<img src="${p.file}" alt="${p.title} tattoo by ${ARTIST_NAME}" loading="lazy"><div class="tag"><span>${p.title}</span></div>`;
+      card.innerHTML = `<img src="${p.file}" alt="Tattoo by ${ARTIST_NAME}" loading="lazy"><div class="tag"><span>${ARTIST_NAME}</span></div>`;
       card.addEventListener("click", () => openLightbox(current.indexOf(p)));
       card.querySelector("img").addEventListener("error", () => card.remove());
     } else {
@@ -273,8 +273,8 @@ function openLightbox(i){
   if(i < 0 || !current.length) return;
   lbIdx = (i + current.length) % current.length;
   const p = current[lbIdx];
-  lbImg.src = p.file; lbImg.alt = p.title + " tattoo by " + ARTIST_NAME;
-  lbMeta.innerHTML = p.title + " &middot; " + (lbIdx + 1) + " of " + current.length + (p.post ? ' &middot; <a href="' + p.post + '" target="_blank" rel="noopener">View original post</a>' : "");
+  lbImg.src = p.file; lbImg.alt = "Tattoo by " + ARTIST_NAME;
+  lbMeta.innerHTML = ARTIST_NAME + " &middot; " + (lbIdx + 1) + " of " + current.length + (p.post ? ' &middot; <a href="' + p.post + '" target="_blank" rel="noopener">View original post</a>' : "");
   lb.classList.add("open");
 }
 function closeLightbox(){ lb.classList.remove("open"); }
