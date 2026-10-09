@@ -10,11 +10,16 @@
 (function(){
   let sb = null;
   const css = `
-  .ea-tabs{display:none; gap:12px; padding:14px 28px; background:#221c14; border-bottom:2px solid #443a2c; justify-content:center; flex-wrap:wrap;}
+  header nav.wrap{position:relative;}
+  .ea-tabs{display:none; gap:34px; align-items:center; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); white-space:nowrap;}
   .ea-tabs.show{display:flex;}
-  .ea-tab{flex:1 1 200px; max-width:320px; text-align:center; font-family:'Libre Franklin',sans-serif; font-weight:700; font-size:15px; padding:13px 18px; color:#ece0c3; background:transparent; border:2px solid #ece0c3; text-decoration:none; transition:all .2s;}
-  .ea-tab:hover{background:#c14a3a; border-color:#c14a3a;}
-  .ea-tab.current{background:#ece0c3; color:#17130e;}
+  .ea-tab{font-family:'Libre Franklin',sans-serif; font-weight:600; font-size:14px; color:#b9ab8c; text-decoration:none; padding-bottom:4px; border-bottom:2px solid transparent; transition:color .2s;}
+  .ea-tab:hover{color:#ece0c3; border-color:#c14a3a;}
+  .ea-tab.current{color:#ece0c3; border-color:#c14a3a;}
+  @media(max-width:820px){
+    header nav.wrap{flex-wrap:wrap; height:auto !important; padding-top:10px; padding-bottom:0;}
+    .ea-tabs{position:static; transform:none; order:3; flex:0 0 100%; justify-content:center; gap:40px; padding:10px 0 12px; margin-top:8px; border-top:1px solid #443a2c;}
+  }
   .ea-menu{position:relative; display:none;}
   .ea-menu.show{display:block;}
   .ea-menu-btn{font-family:'Libre Franklin',sans-serif; font-weight:600; font-size:13px; background:transparent; color:#ece0c3; border:2px solid #ece0c3; padding:8px 14px; cursor:pointer; display:flex; gap:8px; align-items:center;}
@@ -68,8 +73,8 @@
     [["scheduler.html","Scheduler","scheduler"],["portfolio-manager.html","My Portfolio","portfolio"]].forEach(([h,t,k]) => {
       const x = el("a", { href:h, class:"ea-tab", text:t }); if(current === k) x.classList.add("current"); bar.appendChild(x);
     });
-    const hdr = document.querySelector("header");
-    if(hdr) hdr.insertAdjacentElement("afterend", bar); else document.body.prepend(bar);
+    const nav = document.querySelector("header nav");
+    if(nav) nav.appendChild(bar); else document.body.prepend(bar);
     const show = s => { container.classList.toggle("show", !!s); bar.classList.toggle("show", !!s); };
     sb.auth.getSession().then(({ data }) => show(data.session));
     sb.auth.onAuthStateChange((_evt, session) => show(session));
