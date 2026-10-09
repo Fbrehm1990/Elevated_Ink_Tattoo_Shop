@@ -334,6 +334,15 @@
     .foot-inner{flex-direction:column; align-items:flex-start;}
     .foot-meta{gap:10px 18px;}
   }
+
+  /* centered footer with Legal section */
+  footer .foot-center{display:flex; flex-direction:column; align-items:center; text-align:center; gap:18px;}
+  footer .foot-center .foot-meta{justify-content:center; text-align:center; gap:8px 22px;}
+  footer .foot-legal{width:100%; max-width:520px; display:flex; flex-direction:column; align-items:center; gap:10px; margin:6px auto 0; padding-top:18px; border-top:1px solid var(--line); text-align:center;}
+  footer .foot-legal-title{font-family:'Alfa Slab One',serif; font-weight:400; font-size:15px; color:var(--ink); margin:0; letter-spacing:.03em;}
+  footer .foot-legal-links{display:flex; gap:10px 22px; flex-wrap:wrap; justify-content:center; font-size:12.5px;}
+  footer .foot-legal-links a{color:var(--ink-soft); text-decoration:underline;}
+  footer .foot-legal-links a:hover{color:var(--ink);}
 </style>
 </head>
 <body>
@@ -502,7 +511,7 @@
 </section>
 
 <footer id="contact">
-  <div class="wrap foot-inner">
+  <div class="wrap foot-center">
     <a href="#top" class="brand"><img src="logo.png" alt="Elevated Ink" class="brand-logo"></a>
     <div class="foot-meta">
       <span>183 Monroe St. Martinsburg, WV 25404</span>
@@ -511,9 +520,12 @@
       <a href="mailto:elevatedink2025@gmail.com">elevatedink2025@gmail.com</a>
     </div>
     <div class="foot-legal">
-      <a href="terms.html">Terms of Service</a>
-      <a href="privacy.html">Privacy Policy</a>
-      <a href="accessibility.html">Accessibility Statement</a>
+      <h3 class="foot-legal-title">Legal</h3>
+      <nav class="foot-legal-links" aria-label="Legal">
+        <a href="terms.html">Terms of Service</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="accessibility.html">Accessibility Statement</a>
+      </nav>
     </div>
   </div>
 </footer>
@@ -638,7 +650,7 @@ const SB_KEY = "sb_publishable__Qic8J69dJyd76lnVw2m-A_OaF0R9nO";
     const fig = document.createElement("figure");
     fig.className = "spot-slide" + (s.fit === "contain" ? " contain" : "");
     const im = document.createElement("img");
-    im.src = s.img; im.alt = s.alt; if(i > 0) im.loading = "lazy";
+    im.src = s.img; im.alt = s.alt;
     fig.appendChild(im); track.appendChild(fig);
     const d = document.createElement("button");
     d.type = "button"; d.className = "spot-dot"; d.setAttribute("aria-label", "Show photo " + (i + 1));

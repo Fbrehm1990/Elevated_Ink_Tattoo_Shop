@@ -77,6 +77,9 @@
   .sec-head h2{margin-bottom:8px;}
   .sec-head p{color:var(--ink-soft); font-size:15px; margin:0;}
 
+  .specialties{list-style:none; margin:0 0 26px; padding:0; display:flex; gap:10px; flex-wrap:wrap;}
+  .specialties[hidden]{display:none;}
+  .specialties li{font-size:12.5px; font-weight:600; color:var(--ink); border:2px solid var(--line); padding:5px 12px;}
   .bio-copy{max-width:640px;}
   .bio-copy p{color:var(--ink-soft); margin-bottom:16px; font-size:15.5px;}
 
@@ -133,6 +136,15 @@
     .foot-inner{flex-direction:column; align-items:flex-start;}
     .foot-meta{gap:10px 18px;}
   }
+
+  /* centered footer with Legal section */
+  footer .foot-center{display:flex; flex-direction:column; align-items:center; text-align:center; gap:18px;}
+  footer .foot-center .foot-meta{justify-content:center; text-align:center; gap:8px 22px;}
+  footer .foot-legal{width:100%; max-width:520px; display:flex; flex-direction:column; align-items:center; gap:10px; margin:6px auto 0; padding-top:18px; border-top:1px solid var(--line); text-align:center;}
+  footer .foot-legal-title{font-family:'Alfa Slab One',serif; font-weight:400; font-size:15px; color:var(--ink); margin:0; letter-spacing:.03em;}
+  footer .foot-legal-links{display:flex; gap:10px 22px; flex-wrap:wrap; justify-content:center; font-size:12.5px;}
+  footer .foot-legal-links a{color:var(--ink-soft); text-decoration:underline;}
+  footer .foot-legal-links a:hover{color:var(--ink);}
 </style>
 </head>
 <body>
@@ -176,6 +188,7 @@
       <p>Austin is a resident artist at Elevated Ink Tattoo Co., taking custom work by appointment.</p>
       <p>A full bio and specialty details are on the way. In the meantime, browse recent work on Instagram or send a message to start planning your next piece.</p>
     </div>
+    <ul class="specialties" id="specialties" hidden></ul>
     <a href="https://instagram.com/tattooedbyaustin" class="btn btn-primary" target="_blank" rel="noopener">Message Austin on Instagram to Book</a>
   </div>
 </section>
@@ -191,7 +204,7 @@
 </section>
 
 <footer>
-  <div class="wrap foot-inner">
+  <div class="wrap foot-center">
     <a href="index.html#top" class="brand"><img src="logo.png" alt="Elevated Ink" class="brand-logo"></a>
     <div class="foot-meta">
       <span>183 Monroe St. Martinsburg, WV 25404</span>
@@ -200,9 +213,12 @@
       <a href="mailto:elevatedink2025@gmail.com">elevatedink2025@gmail.com</a>
     </div>
     <div class="foot-legal">
-      <a href="terms.html">Terms of Service</a>
-      <a href="privacy.html">Privacy Policy</a>
-      <a href="accessibility.html">Accessibility Statement</a>
+      <h3 class="foot-legal-title">Legal</h3>
+      <nav class="foot-legal-links" aria-label="Legal">
+        <a href="terms.html">Terms of Service</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="accessibility.html">Accessibility Statement</a>
+      </nav>
     </div>
   </div>
 </footer>
@@ -283,6 +299,32 @@ async function loadPortfolio(){
   return [...all.filter(i => i.featured), ...all.filter(i => !i.featured)];
 }
 loadPortfolio().then(items => renderPortfolio(items.length ? items : FALLBACK)).catch(() => renderPortfolio(FALLBACK));
+
+// Artist-written text (role, intro, bio, specialties, Instagram) from Supabase, layered over the defaults in the page.
+async function loadProfileText(){
+  let row = null;
+  try{
+    const r = await fetch(SB_URL + "/rest/v1/artist_bios?artist_id=eq." + ARTIST + "&select=*", { headers:{ apikey: SB_KEY } });
+    if(r.ok){ const a = await r.json(); row = a[0] || null; }
+  }catch(e){}
+  if(!row) return;
+  const set = (sel, v) => { const n = document.querySelector(sel); if(n && v && v.trim()) n.textContent = v.trim(); };
+  set(".artist-role", row.role);
+  set("#bio .sec-head p", row.tagline);
+  if(row.bio && row.bio.trim()){
+    const box = document.querySelector("#bio .bio-copy"); box.innerHTML = "";
+    row.bio.trim().split(/\n\s*\n|\n/).filter(s => s.trim()).forEach(t => { const p = document.createElement("p"); p.textContent = t.trim(); box.appendChild(p); });
+  }
+  const tags = (row.specialties || "").split(",").map(s => s.trim()).filter(Boolean).slice(0, 8);
+  const ul = document.getElementById("specialties");
+  if(ul && tags.length){ ul.innerHTML = ""; tags.forEach(t => { const li = document.createElement("li"); li.textContent = t; ul.appendChild(li); }); ul.hidden = false; }
+  const h = (row.instagram || "").trim().replace(/^@/, "");
+  if(/^[A-Za-z0-9._]{1,30}$/.test(h)){
+    document.querySelectorAll('a[href^="https://instagram.com/"]').forEach(a => { a.href = "https://instagram.com/" + h; });
+    document.querySelectorAll(".social-link").forEach(a => { const t = [...a.childNodes].reverse().find(n => n.nodeType === 3 && n.textContent.trim()); if(t) t.textContent = " @" + h + " "; });
+  }
+}
+loadProfileText();
 
 const lb = document.getElementById("lightbox"), lbImg = document.getElementById("lbImg"), lbMeta = document.getElementById("lbMeta");
 let lbIdx = 0;

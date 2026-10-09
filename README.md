@@ -134,3 +134,34 @@ How photos are combined on the public pages:
 - If Supabase can't be reached, the pages fall back to the starter set.
 - Featured photos show first on the artist page, and up to 4 per artist appear in the
   homepage gallery.
+
+
+## Artist accounts (created by the shop owner)
+
+Public sign-up is OFF. The shop owner creates each artist's account in Supabase.
+`auth.js` (shared by `scheduler.html`, `portfolio-manager.html`, `change-password.html`)
+adds a **Menu** dropdown once signed in: Scheduler, My Portfolio, Change password, Sign out.
+
+**One-time setup**
+1. Supabase -> Authentication -> Sign In / Providers -> turn OFF "Allow new users to sign up".
+2. For each artist: Authentication -> Users -> Add user -> Create new user. Enter their email and a
+   temporary password and tick "Auto Confirm User".
+3. Link each account to its artist page (SQL Editor), one line per artist:
+   `insert into artist_profiles (user_id, artist_id) select id, 'tj' from auth.users where email = 'tj@example.com';`
+   Artist ids: tj, austin, ariana, makenzi, aaron, doug.
+4. Tell each artist their temporary password. After signing in at /scheduler they open
+   Menu -> Change password and choose their own.
+
+To remove an artist's access: Authentication -> Users -> delete (or ban) the user.
+
+## Artist profile text (bio, title, intro, specialties, Instagram)
+
+Run `supabase_profiles.sql` once in the Supabase SQL Editor. Artists then edit these under
+**My Portfolio -> Edit Portfolio -> Profile & bio**. Saved text shows on their public page
+(`/tj`, `/austin`, ...); blank boxes keep the default text already in the page. Artists can only
+change their own row.
+
+## Footer
+
+Every page's footer is centered: logo, contact info, then a **Legal** heading with the Terms,
+Privacy and Accessibility links centered beneath it.

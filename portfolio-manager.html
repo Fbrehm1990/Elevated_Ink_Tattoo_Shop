@@ -64,6 +64,15 @@
   .tab{flex:1 1 160px; font:inherit; font-weight:700; font-size:15px; padding:12px 18px; background:transparent; color:var(--ink); border:2px solid var(--ink); cursor:pointer;}
   .tab:hover{background:var(--red); border-color:var(--red);}
   .tab.active{background:var(--ink); color:var(--paper);}
+  .profile-card{border:2px solid var(--line); background:var(--paper); padding:22px; margin-bottom:30px;}
+  .profile-card h3{font-size:22px; margin-bottom:6px;}
+  .profile-card .hint{margin-bottom:18px;}
+  .profile-card .field{margin-bottom:16px;}
+  .profile-card .field label{display:flex; justify-content:space-between; gap:10px;}
+  .profile-card .field label small{font-weight:400; text-transform:none; letter-spacing:0;}
+  .profile-card input[type=text], .profile-card textarea{width:100%; padding:12px 14px; font:inherit; background:var(--paper-alt); color:var(--ink); border:2px solid var(--line);}
+  .profile-card textarea{min-height:170px; resize:vertical; line-height:1.5;}
+  .profile-card input:focus, .profile-card textarea:focus{outline:none; border-color:var(--red);}
   .hint{color:var(--ink-soft); font-size:14px; margin:0 0 10px;}
   .upload-box{border:2px dashed var(--ink-soft); padding:22px; margin-bottom:12px; display:flex; gap:16px; align-items:center; flex-wrap:wrap;}
   .upload-box p{margin:0; color:var(--ink-soft); font-size:14px; flex:1 1 240px;}
@@ -156,6 +165,18 @@
       <div class="msg" id="mgrMsg" role="status"></div>
 
       <div id="panelEdit" style="display:none;">
+      <div class="profile-card">
+        <h3>Profile &amp; bio</h3>
+        <p class="hint">This is the written part of your page. Leave a box blank to keep the default text.</p>
+        <div class="field"><label for="pfRole">Title</label><input type="text" id="pfRole" maxlength="60" placeholder="Resident Artist"></div>
+        <div class="field"><label for="pfTagline">Short intro <small id="cTagline"></small></label><input type="text" id="pfTagline" maxlength="160" placeholder="One line shown under “About”"></div>
+        <div class="field"><label for="pfBio">Bio <small id="cBio"></small></label><textarea id="pfBio" maxlength="2000" placeholder="Tell clients about your style, experience and what you love to tattoo. Press Enter twice to start a new paragraph."></textarea></div>
+        <div class="field"><label for="pfSpec">Specialties <small>separate with commas</small></label><input type="text" id="pfSpec" maxlength="200" placeholder="Traditional, Color realism, Lettering"></div>
+        <div class="field"><label for="pfIg">Instagram handle</label><input type="text" id="pfIg" maxlength="31" placeholder="yourhandle" autocapitalize="off" autocorrect="off"></div>
+        <div class="msg" id="pfMsg" role="status"></div>
+        <button class="btn btn-primary" id="pfSave" type="button">Save profile</button>
+      </div>
+      <h3 style="font-size:22px; margin-bottom:6px;">Photos</h3>
       <p class="hint">Tap <b>Edit</b> on a photo to change its caption or feature it. Tap <b>Remove</b> to take it off your page (you can restore it below).</p>
       <div id="count" style="color:var(--ink-soft); font-size:14px;"></div>
       <div class="grid" id="grid"></div>
@@ -231,7 +252,33 @@ async function start(){
   $("viewPage").href = artistId + ".html";
   $("loginShell").style.display = "none"; $("manager").style.display = "block";
   await load();
+  loadProfileText();
 }
+
+
+/* ---------- profile text (bio etc.) ---------- */
+const PF = { role:"pfRole", tagline:"pfTagline", bio:"pfBio", specialties:"pfSpec", instagram:"pfIg" };
+function counts(){ $("cBio").textContent = $("pfBio").value.length + " / 2000"; $("cTagline").textContent = $("pfTagline").value.length + " / 160"; }
+$("pfBio").addEventListener("input", counts); $("pfTagline").addEventListener("input", counts);
+async function loadProfileText(){
+  const { data, error } = await sb.from("artist_bios").select("*").eq("artist_id", artistId).maybeSingle();
+  if(error){ say($("pfMsg"), "Couldn't load your profile text (" + error.message + "). Has supabase_profiles.sql been run?"); return; }
+  Object.entries(PF).forEach(([k, id]) => { $(id).value = (data && data[k]) || ""; });
+  counts();
+}
+$("pfSave").addEventListener("click", async () => {
+  const row = { artist_id: artistId, updated_at: new Date().toISOString() };
+  Object.entries(PF).forEach(([k, id]) => { row[k] = $(id).value.trim(); });
+  row.instagram = row.instagram.replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/[\/?].*$/, "");
+  if(row.instagram && !/^[A-Za-z0-9._]{1,30}$/.test(row.instagram)){ say($("pfMsg"), "Instagram handle can only use letters, numbers, periods and underscores."); return; }
+  row.specialties = row.specialties.split(",").map(s => s.trim()).filter(Boolean).slice(0, 8).join(", ");
+  $("pfIg").value = row.instagram; $("pfSpec").value = row.specialties;
+  $("pfSave").disabled = true; say($("pfMsg"), "Saving…");
+  const { error } = await sb.from("artist_bios").upsert(row, { onConflict:"artist_id" });
+  $("pfSave").disabled = false;
+  if(error){ say($("pfMsg"), "Couldn't save: " + error.message); return; }
+  say($("pfMsg"), "Saved. Your public page is updated.", true);
+});
 
 /* ---------- load + merge (same rules the public pages use) ---------- */
 async function load(){
@@ -239,7 +286,7 @@ async function load(){
   let base = {};
   try{ const r = await fetch("portfolio.json"); if(r.ok) base = await r.json(); }catch(e){}
   const staticItems = base[artistId] || [];
-  const { data: rows, error } = await sb.from("portfolio_photos").select("*").eq("artist_id", artistId).order("created_at", { ascending:false });
+  let { data: rows, error } = await sb.from("portfolio_photos").select("*").eq("artist_id", artistId).order("created_at", { ascending:false });
   if(error){
     say($("mgrMsg"), "Couldn't load edits (" + error.message + "). Has supabase_portfolio.sql been run?");
     rows = [];
