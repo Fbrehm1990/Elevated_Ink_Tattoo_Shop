@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth.js"></script>
 <style>
   :root{
     --paper:#17130e; --paper-alt:#221c14; --ink:#ece0c3; --ink-soft:#b9ab8c;
@@ -28,7 +29,7 @@
   header{position:sticky; top:0; z-index:50; background:var(--paper); border-bottom:3px solid var(--ink);}
   nav.wrap{display:flex; align-items:center; justify-content:space-between; height:76px;}
   .brand-logo{height:46px; width:auto; display:block;}
-  .nav-links{display:flex; gap:12px; flex-wrap:wrap; justify-content:flex-end;}
+  .nav-links{display:flex; gap:12px; flex-wrap:wrap; justify-content:flex-end; align-items:center;}
   .back-link{font-weight:600; font-size:13px; color:var(--ink-soft); text-decoration:none; border:2px solid var(--line); padding:8px 14px; transition:all .2s;}
   .back-link:hover{color:var(--ink); border-color:var(--ink);}
 
@@ -59,6 +60,11 @@
   .bar{display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:24px;}
   .bar b{color:var(--gold);}
 
+  .tabs{display:flex; gap:12px; margin-bottom:22px; flex-wrap:wrap;}
+  .tab{flex:1 1 160px; font:inherit; font-weight:700; font-size:15px; padding:12px 18px; background:transparent; color:var(--ink); border:2px solid var(--ink); cursor:pointer;}
+  .tab:hover{background:var(--red); border-color:var(--red);}
+  .tab.active{background:var(--ink); color:var(--paper);}
+  .hint{color:var(--ink-soft); font-size:14px; margin:0 0 10px;}
   .upload-box{border:2px dashed var(--ink-soft); padding:22px; margin-bottom:12px; display:flex; gap:16px; align-items:center; flex-wrap:wrap;}
   .upload-box p{margin:0; color:var(--ink-soft); font-size:14px; flex:1 1 240px;}
   #fileInput{display:none;}
@@ -105,7 +111,7 @@
   <nav class="wrap">
     <a href="index.html" class="brand"><img src="logo.png" alt="Elevated Ink" class="brand-logo"></a>
     <div class="nav-links">
-      <a href="scheduler.html" class="back-link">Scheduler</a>
+      <div id="artistMenu"></div>
       <a href="index.html" class="back-link">&larr; Back to site</a>
     </div>
   </nav>
@@ -125,7 +131,7 @@
         <div class="field"><label for="password">Password</label><input type="password" id="password" autocomplete="current-password"></div>
       </div>
       <div class="msg" id="loginMsg"></div>
-      <button class="btn btn-primary" id="loginBtn" type="button">Sign In</button>
+      <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;"><button class="btn btn-primary" id="loginBtn" type="button">Sign In</button></div>
     </div>
 
     <!-- MANAGER -->
@@ -135,13 +141,22 @@
         <button class="btn btn-ghost btn-sm" id="logoutBtn" type="button">Sign Out</button>
       </div>
 
+      <div class="tabs" role="tablist">
+        <button class="tab active" id="tabAdd" type="button" role="tab" aria-selected="true">Add Images</button>
+        <button class="tab" id="tabEdit" type="button" role="tab" aria-selected="false">Edit Portfolio</button>
+      </div>
+
+      <div id="panelAdd">
       <div class="upload-box">
         <p>Add new photos (JPG, PNG or WebP). Large photos are resized automatically before upload.</p>
         <button class="btn btn-primary" id="pickBtn" type="button">Add photos</button>
         <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple>
       </div>
+      </div>
       <div class="msg" id="mgrMsg" role="status"></div>
 
+      <div id="panelEdit" style="display:none;">
+      <p class="hint">Tap <b>Edit</b> on a photo to change its caption or feature it. Tap <b>Remove</b> to take it off your page (you can restore it below).</p>
       <div id="count" style="color:var(--ink-soft); font-size:14px;"></div>
       <div class="grid" id="grid"></div>
 
@@ -149,6 +164,7 @@
         <summary id="removedSummary">Removed photos</summary>
         <div class="mini-grid" id="removedGrid"></div>
       </details>
+      </div>
     </div>
   </div>
 </section>
@@ -174,6 +190,8 @@
 const SUPABASE_URL = "https://bvsgrgdardumiabfewwr.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable__Qic8J69dJyd76lnVw2m-A_OaF0R9nO";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+ArtistAuth.init(sb);
+ArtistAuth.mountMenu(document.getElementById("artistMenu"), "portfolio");
 const ARTISTS = { tj:"TJ", austin:"Austin", ariana:"Ariana", makenzi:"Makenzi", aaron:"Aaron", doug:"Doug" };
 const BUCKET = "portfolio";
 const MAX_SIDE = 1600;
@@ -204,8 +222,9 @@ async function start(){
   if(!sess.session){ $("loginShell").style.display = "block"; return; }
   const { data: profile, error } = await sb.from("artist_profiles").select("artist_id").single();
   if(error || !profile){
-    say($("loginMsg"), "Signed in, but no artist profile is linked to this account yet.");
-    await sb.auth.signOut(); $("loginShell").style.display = "block"; return;
+    $("loginShell").style.display = "block";
+    say($("loginMsg"), "Signed in, but this account isn't linked to an artist page yet. Please ask the shop owner to finish setting up your account.");
+    return;
   }
   artistId = profile.artist_id;
   $("artistName").textContent = ARTISTS[artistId] || artistId;
@@ -244,7 +263,7 @@ function render(){
   const removed = items.filter(i => i.hidden);
   $("count").textContent = visible.length + " photo" + (visible.length === 1 ? "" : "s") + " on your page";
   const grid = $("grid"); grid.innerHTML = "";
-  if(!visible.length){ const p = document.createElement("p"); p.className = "empty"; p.textContent = "No photos yet. Use “Add photos” to upload your first one."; grid.appendChild(p); }
+  if(!visible.length){ const p = document.createElement("p"); p.className = "empty"; p.textContent = "No photos yet. Open the Add Images tab to upload your first one."; grid.appendChild(p); }
   visible.forEach(it => {
     const card = document.createElement("div"); card.className = "card";
     const th = document.createElement("div"); th.className = "thumb";
@@ -325,6 +344,14 @@ async function restoreItem(it){
 }
 
 /* ---------- upload (resize in the browser first) ---------- */
+function showTab(which){
+  const add = which === "add";
+  $("panelAdd").style.display = add ? "block" : "none"; $("panelEdit").style.display = add ? "none" : "block";
+  $("tabAdd").classList.toggle("active", add); $("tabEdit").classList.toggle("active", !add);
+  $("tabAdd").setAttribute("aria-selected", add); $("tabEdit").setAttribute("aria-selected", !add);
+}
+$("tabAdd").addEventListener("click", () => showTab("add"));
+$("tabEdit").addEventListener("click", () => showTab("edit"));
 $("pickBtn").addEventListener("click", () => $("fileInput").click());
 $("fileInput").addEventListener("change", async e => {
   const files = [...e.target.files]; e.target.value = "";
@@ -338,6 +365,7 @@ $("fileInput").addEventListener("change", async e => {
   $("pickBtn").disabled = false;
   await load();
   say($("mgrMsg"), ok + " photo" + (ok === 1 ? "" : "s") + " added" + (fail ? ", " + fail + " failed" : "") + ".", !fail);
+  if(ok && !fail) showTab("edit");
 });
 
 async function toJpeg(file){
