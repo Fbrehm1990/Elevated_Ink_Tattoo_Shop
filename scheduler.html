@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth.js"></script>
 <style>
   :root{
     --paper:#17130e;
@@ -301,7 +302,7 @@
     .foot-inner{flex-direction:column; align-items:flex-start;}
     .foot-meta{gap:10px 18px;}
   }
-  .back-link{font-weight:600; font-size:13px; color:var(--ink-soft); text-decoration:none; border-bottom:1px solid var(--line);}
+  .back-link{font-weight:600; font-size:13px; color:var(--ink-soft); text-decoration:none; border:2px solid var(--line); padding:8px 14px; transition:all .2s;}
   .back-link:hover{color:var(--ink); border-color:var(--ink);}
 </style>
 </head>
@@ -309,8 +310,8 @@
 
 <header id="top">
   <nav class="wrap" style="justify-content:space-between;">
-    <a href="#top" class="brand"><img src="logo.png" alt="Elevated Ink" class="brand-logo"></a>
-    <a href="index.html" class="back-link">&larr; Back to site</a>
+    <a href="index.html" class="brand"><img src="logo.png" alt="Elevated Ink" class="brand-logo"></a>
+    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; justify-content:flex-end;"><div id="artistMenu"></div><a href="index.html" class="back-link">&larr; Back to site</a></div>
   </nav>
 </header>
 
@@ -338,13 +339,13 @@
         <input type="checkbox" id="staffRemember">
         <span>Remember my email on this device</span>
       </label>
-      <button class="btn btn-primary" id="staffLoginBtn" type="button">Sign In</button>
+      <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;"><button class="btn btn-primary" id="staffLoginBtn" type="button">Sign In</button></div>
     </div>
 
     <div class="booking-shell" id="staffDashboard" style="display:none;">
       <div class="summary-bar" style="border-top:none; padding-top:0; margin-top:0; margin-bottom:26px;">
         <div class="sum-text">Signed in as <b id="staffArtistName"></b></div>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;"><a class="btn btn-ghost" href="portfolio-manager.html">My Portfolio</a><button class="btn btn-ghost" id="staffLogoutBtn" type="button">Sign Out</button></div>
+        <button class="btn btn-ghost" id="staffLogoutBtn" type="button">Sign Out</button>
       </div>
 
       <div class="cal-header">
@@ -474,7 +475,7 @@
 
 <footer>
   <div class="wrap foot-inner">
-    <a href="#top" class="brand"><img src="logo.png" alt="Elevated Ink" class="brand-logo"></a>
+    <a href="index.html" class="brand"><img src="logo.png" alt="Elevated Ink" class="brand-logo"></a>
     <div class="foot-meta">
       <span>183 Monroe St. Martinsburg, WV 25404</span>
       <span>(681) 575-0008</span>
@@ -530,6 +531,8 @@ const DOW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const SUPABASE_URL = "https://bvsgrgdardumiabfewwr.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable__Qic8J69dJyd76lnVw2m-A_OaF0R9nO";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+ArtistAuth.init(supabaseClient);
+ArtistAuth.mountMenu(document.getElementById("artistMenu"), "scheduler");
 
 function pad(n){ return n.toString().padStart(2,"0"); }
 function fmtDate(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
@@ -610,8 +613,7 @@ async function loadStaffProfile(){
     .single();
 
   if(error || !profile){
-    msg.textContent = "Signed in, but no artist profile is linked to this account yet.";
-    await supabaseClient.auth.signOut();
+    msg.textContent = "Signed in, but this account isn't linked to an artist page yet. Please ask the shop owner to finish setting up your account.";
     return;
   }
 
