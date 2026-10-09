@@ -50,7 +50,7 @@
     flex-direction:column; gap:0; background:var(--paper); border-bottom:3px solid var(--ink);
     padding:6px 28px 18px; z-index:60;
   }
-  .navlinks.open a{padding:13px 0; border-bottom:1px solid var(--line);}
+  .navlinks.open a{display:block; padding:13px 0; border-bottom:1px solid var(--line);}
 
   /* ---------- ARTIST HEADER ---------- */
   .artist-hero{padding:70px 0 64px; border-bottom:3px solid var(--ink);}
@@ -92,11 +92,27 @@
     position:absolute; bottom:0; left:0; right:0; padding:10px 12px;
     background:rgba(23,19,14,0.88); font-size:11.5px; color:#ece0c3; display:flex; justify-content:space-between;
   }
+  .gcard img{width:100%; height:100%; object-fit:cover; display:block; transition:transform .35s;}
+  a.gcard{display:block; text-decoration:none; color:inherit;}
+  a.gcard:hover img, .gcard.zoomable:hover img{transform:scale(1.04);}
+  .gcard.zoomable{cursor:zoom-in;}
   .gcard .tag b{color:var(--gold); font-weight:700;}
+  .lightbox{position:fixed; inset:0; z-index:200; background:rgba(10,8,5,.94); display:none; align-items:center; justify-content:center; flex-direction:column; gap:14px; padding:20px;}
+  .lightbox.open{display:flex;}
+  .lightbox img{max-width:100%; max-height:78vh; width:auto; height:auto; border:2px solid var(--ink); object-fit:contain;}
+  .lightbox .lb-meta{color:var(--ink-soft); font-size:14px; text-align:center;}
+  .lightbox .lb-meta a{color:var(--ink); font-weight:600;}
+  .lightbox .lb-close{position:absolute; top:14px; right:18px; background:none; border:2px solid var(--ink); color:var(--ink); width:42px; height:42px; font-size:22px; cursor:pointer;}
+  .lightbox .lb-nav{position:absolute; top:50%; transform:translateY(-50%); background:rgba(23,19,14,.8); border:2px solid var(--ink); color:var(--ink); width:42px; height:54px; font-size:22px; cursor:pointer;}
+  .lightbox .lb-prev{left:10px;} .lightbox .lb-next{right:10px;}
+  .empty-note{color:var(--ink-soft); font-size:15px;}
 
   footer{padding:44px 0;}
   .foot-inner{display:flex; justify-content:space-between; flex-wrap:wrap; gap:20px; align-items:center;}
   .foot-meta{font-size:12.5px; color:var(--ink-soft); display:flex; gap:22px; flex-wrap:wrap;}
+  .foot-legal{width:100%; display:flex; gap:16px; flex-wrap:wrap; margin-top:14px; padding-top:14px; border-top:1px solid var(--line); font-size:11.5px;}
+  .foot-legal a{color:var(--ink-soft); text-decoration:underline;}
+  .foot-legal a:hover{color:var(--ink);}
 
   @media(max-width:920px){
     .navlinks{display:none;}
@@ -168,7 +184,7 @@
   <div class="wrap">
     <div class="sec-head">
       <h2>Recent pieces by TJ</h2>
-      <p>A few examples of recent flash-style work.</p>
+      <p>Recent work. Tap any photo to enlarge it.</p>
     </div>
     <div class="gallery-grid" id="portfolioGrid"></div>
   </div>
@@ -183,8 +199,21 @@
       <span>(681) 575-0008</span>
       <a href="mailto:elevatedink2025@gmail.com">elevatedink2025@gmail.com</a>
     </div>
+    <div class="foot-legal">
+      <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="accessibility.html">Accessibility Statement</a>
+    </div>
   </div>
 </footer>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
+  <button class="lb-close" id="lbClose" aria-label="Close">&times;</button>
+  <button class="lb-nav lb-prev" id="lbPrev" aria-label="Previous photo">&lsaquo;</button>
+  <button class="lb-nav lb-next" id="lbNext" aria-label="Next photo">&rsaquo;</button>
+  <img id="lbImg" alt="">
+  <div class="lb-meta" id="lbMeta"></div>
+</div>
 
 <script>
 const navToggle = document.getElementById("navToggle");
@@ -209,17 +238,55 @@ function svgWrap(inner, accent){
 function svgMoth(){return svgWrap(`<path d="M150 90 L150 310"/><path d="M150 130 C80 90 40 140 55 210 C70 270 120 260 150 200"/><path d="M150 130 C220 90 260 140 245 210 C230 270 180 260 150 200"/><circle cx="150" cy="95" r="8"/><path d="M142 88 L120 60 M158 88 L180 60"/>`,"#d4a94f");}
 function svgMountain(){return svgWrap(`<path d="M30 280 L100 160 L140 210 L190 120 L270 280 Z"/><path d="M30 280 L270 280"/><circle cx="220" cy="100" r="22"/>`,"#221c14");}
 
-const PORTFOLIO = [
-  { title: "Moth study", svg: svgMoth() },
-  { title: "Mountain linework", svg: svgMountain() }
-];
-
+const ARTIST = "tj";
+const ARTIST_NAME = "TJ";
+const FALLBACK = [];
 const grid = document.getElementById("portfolioGrid");
-PORTFOLIO.forEach(p => {
-  const card = document.createElement("div");
-  card.className = "gcard";
-  card.innerHTML = p.svg + `<div class="tag"><span>${p.title}</span></div>`;
-  grid.appendChild(card);
+let current = [];
+function renderPortfolio(items){
+  current = items.filter(p => p.file);
+  grid.innerHTML = "";
+  if(!items.length){ grid.innerHTML = '<p class="empty-note">Photos coming soon. See the latest work on Instagram.</p>'; return; }
+  items.forEach(p => {
+    const card = document.createElement("div");
+    card.className = "gcard";
+    if(p.file){
+      card.classList.add("zoomable");
+      card.innerHTML = `<img src="${p.file}" alt="${p.title} tattoo by ${ARTIST_NAME}" loading="lazy"><div class="tag"><span>${p.title}</span></div>`;
+      card.addEventListener("click", () => openLightbox(current.indexOf(p)));
+      card.querySelector("img").addEventListener("error", () => card.remove());
+    } else {
+      card.innerHTML = p.svg + `<div class="tag"><span>${p.title}</span></div>`;
+    }
+    grid.appendChild(card);
+  });
+}
+fetch("portfolio.json").then(r => r.ok ? r.json() : Promise.reject()).then(d => {
+  const items = d[ARTIST] || [];
+  const sorted = [...items.filter(i => i.featured), ...items.filter(i => !i.featured)];
+  renderPortfolio(sorted.length ? sorted : FALLBACK);
+}).catch(() => renderPortfolio(FALLBACK));
+
+const lb = document.getElementById("lightbox"), lbImg = document.getElementById("lbImg"), lbMeta = document.getElementById("lbMeta");
+let lbIdx = 0;
+function openLightbox(i){
+  if(i < 0 || !current.length) return;
+  lbIdx = (i + current.length) % current.length;
+  const p = current[lbIdx];
+  lbImg.src = p.file; lbImg.alt = p.title + " tattoo by " + ARTIST_NAME;
+  lbMeta.innerHTML = p.title + " &middot; " + (lbIdx + 1) + " of " + current.length + (p.post ? ' &middot; <a href="' + p.post + '" target="_blank" rel="noopener">View original post</a>' : "");
+  lb.classList.add("open");
+}
+function closeLightbox(){ lb.classList.remove("open"); }
+document.getElementById("lbClose").addEventListener("click", closeLightbox);
+document.getElementById("lbPrev").addEventListener("click", () => openLightbox(lbIdx - 1));
+document.getElementById("lbNext").addEventListener("click", () => openLightbox(lbIdx + 1));
+lb.addEventListener("click", e => { if(e.target === lb) closeLightbox(); });
+document.addEventListener("keydown", e => {
+  if(!lb.classList.contains("open")) return;
+  if(e.key === "Escape") closeLightbox();
+  if(e.key === "ArrowLeft") openLightbox(lbIdx - 1);
+  if(e.key === "ArrowRight") openLightbox(lbIdx + 1);
 });
 </script>
 
