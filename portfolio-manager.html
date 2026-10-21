@@ -237,7 +237,7 @@ const SUPABASE_ANON_KEY = "sb_publishable__Qic8J69dJyd76lnVw2m-A_OaF0R9nO";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 ArtistAuth.init(sb);
 const MANAGE_MODE = /[?&]manage\b/.test(location.search);
-ArtistAuth.mountMenu(document.getElementById("artistMenu"), MANAGE_MODE ? "manage" : "portfolio");
+ArtistAuth.mountMenu(document.getElementById("artistMenu"), "portfolio");
 if(MANAGE_MODE){ document.title = "Manage Portfolios — Elevated Ink Tattoo Co."; document.getElementById("pageTitle").textContent = "Manage Portfolios";  }
 const ARTISTS = { tj:"TJ", ariana:"Ariana", makenzi:"Makenzi", aaron:"Aaron", austin:"Austin", doug:"Doug", freddy:"Freddy (test)" };
 const BUCKET = "portfolio";

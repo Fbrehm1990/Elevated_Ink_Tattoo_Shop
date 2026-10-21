@@ -41,16 +41,37 @@
     (children || []).forEach(c => e.appendChild(c));
     return e;
   }
-  /* ---------- header "Staff menu" link ---------- */
+  /* ---------- header: centered Portfolio / Scheduler / Manage tabs + Staff menu link ---------- */
   function mountMenu(container, current){
     if(!container) return;
     container.classList.add("ea-menu");
     const a = el("a", { href:"staff.html", class:"ea-menu-btn", text:"Staff menu" });
     a.style.textDecoration = "none";
     container.appendChild(a);
-    const show = s => container.classList.toggle("show", !!s);
-    sb.auth.getSession().then(({ data }) => { show(data.session); });
-    sb.auth.onAuthStateChange((_evt, session) => { show(session); });
+    const bar = el("div", { class:"ea-tabs" });
+    const tab = (h, t, k) => { const x = el("a", { href:h, class:"ea-tab", text:t }); if(current === k) x.classList.add("current"); bar.appendChild(x); return x; };
+    const tp = tab("portfolio-manager.html", "Portfolio", "portfolio");
+    tab("scheduler.html", "Scheduler", "scheduler");
+    const nav = document.querySelector("header nav");
+    if(nav) nav.appendChild(bar); else document.body.prepend(bar);
+    const show = s => { container.classList.toggle("show", !!s); bar.classList.toggle("show", !!s); };
+    async function check(session){
+      show(session);
+      if(!session) return;
+      try{
+        const r = await sb.from("staff_roles").select("role").maybeSingle();
+        const role = r.data && r.data.role;
+        if(role === "master" || role === "social"){
+          tp.href = "portfolio-manager.html?manage=1";
+          if(!bar.querySelector(".ea-manage")){
+            const m = tab("index.html", "Manage", "manage"); m.classList.add("ea-manage");
+            m.addEventListener("click", () => { try{ sessionStorage.setItem("eiManage", "1"); }catch(e){} });
+          }
+        }
+      }catch(e){}
+    }
+    sb.auth.getSession().then(({ data }) => check(data.session));
+    sb.auth.onAuthStateChange((_evt, session) => check(session));
   }
 
   window.ArtistAuth = {

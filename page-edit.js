@@ -49,6 +49,16 @@
     st.textContent = `
     .gcard.editable{cursor:pointer;}
     .gcard.editable::after{content:"\\270E  Edit"; position:absolute; top:8px; right:8px; background:#d4a94f; color:#221c14; font:700 13px 'Libre Franklin',sans-serif; padding:6px 11px; z-index:2;}
+    .pe-top{display:flex; gap:20px; align-items:center; margin-right:14px; flex-shrink:0;}
+    .pe-top a{font:600 14px 'Libre Franklin',sans-serif; color:#b9ab8c; text-decoration:none; padding-bottom:3px; border-bottom:2px solid transparent;}
+    .pe-top a:hover{color:#ece0c3; border-color:#c14a3a;}
+    .pe-switch{display:flex; align-items:center; gap:9px; background:none; border:0; padding:0; cursor:pointer; font:700 14px 'Libre Franklin',sans-serif; color:#b9ab8c;}
+    .pe-switch .trk{width:42px; height:24px; border-radius:12px; background:#443a2c; position:relative; transition:background .2s; flex-shrink:0;}
+    .pe-switch .trk::after{content:""; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#ece0c3; transition:left .2s;}
+    .pe-switch[aria-checked="true"]{color:#d4a94f;}
+    .pe-switch[aria-checked="true"] .trk{background:#d4a94f;}
+    .pe-switch[aria-checked="true"] .trk::after{left:21px; background:#221c14;}
+    @media(max-width:820px){ header nav.wrap{flex-wrap:wrap; height:auto !important; padding-top:10px;} .pe-top{order:5; flex:0 0 100%; justify-content:center; margin:8px 0 0; padding:10px 0 12px; border-top:1px solid #443a2c;} }
     .pe-manage{font:700 14px 'Libre Franklin',sans-serif; padding:9px 16px; border:2px solid #d4a94f; color:#d4a94f; background:transparent; cursor:pointer; white-space:nowrap; transition:all .2s; margin-right:10px; flex-shrink:0;}
     .pe-manage:hover{background:#d4a94f; color:#221c14;}
     .pe-manage.on{background:#d4a94f; color:#221c14;}
@@ -147,6 +157,25 @@
     const canEditArtist = a => isManager || ownId === a;
     const allowed = PAGE_ARTIST ? canEditArtist(PAGE_ARTIST) : (isManager || !!ownId);
     console.log("[page-edit] role:", role || "none", "| linked artist:", ownId || "none", "| page:", PAGE_ARTIST || "homepage", roleRes.error ? "| role lookup error: " + roleRes.error.message : "");
+    let topSwitch = null, switchHandler = null;
+    if(ownId || isManager){
+      addStyles();
+      const strip = el("div", { class:"pe-top" }, [
+        el("a", { href: isManager ? "portfolio-manager.html?manage=1" : "portfolio-manager.html", text:"Portfolio" }),
+        el("a", { href:"scheduler.html", text:"Scheduler" })]);
+      if(isManager){
+        topSwitch = el("button", { class:"pe-switch", type:"button", role:"switch", "aria-checked":"false", "aria-label":"Manage mode (edit photos on the site)" }, [el("span", { text:"Manage" }), el("span", { class:"trk" })]);
+        topSwitch.addEventListener("click", () => { if(switchHandler) switchHandler(topSwitch.getAttribute("aria-checked") !== "true"); });
+        strip.appendChild(topSwitch);
+      }
+      const nav = document.querySelector("header nav");
+      if(nav){
+        const actions = nav.querySelector(".nav-actions"), toggle = nav.querySelector(".navtoggle");
+        if(actions) nav.insertBefore(strip, actions);
+        else if(toggle) nav.insertBefore(strip, toggle);
+        else nav.appendChild(strip);
+      }
+    }
     if(!allowed){
       if(/[?&]editdebug\b/.test(location.search) || roleRes.error){
         addStyles();
@@ -284,6 +313,7 @@
     /* ----- the Manage button at the top: turns editing on/off ----- */
     async function setMode(on, redraw){
       API.on = on;
+      if(topSwitch) topSwitch.setAttribute("aria-checked", String(on));
       bar.style.display = on ? "flex" : "none";
       
       try{ sessionStorage.setItem("eiManage", on ? "1" : "0"); }catch(e){}
@@ -408,6 +438,7 @@
       slideBtn.addEventListener("click", e => { e.stopPropagation(); openSlides(); });
     }
 
+    switchHandler = on => setMode(on);
     await setMode(startOn, startOn); // off: plain site, nothing extra on screen. on: draw Edit tags.
   }
 })();
