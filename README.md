@@ -199,7 +199,11 @@ on an artist page). The spotlight/team photos are fixed site images and are not 
 
 ## Simple editing for non-technical staff (page-edit.js)
 
-Every page footer has a small "Staff sign-in" link. TJ/Ariana/artists sign in there (no scheduler needed). They then get a
-big bottom bar ("Add a photo", with an artist picker on the homepage) and every photo shows an Edit tag. Tapping a photo opens
+Every page footer has a small "Staff sign-in" link. TJ/Ariana/artists sign in there (no scheduler needed). They get a
+"Manage" button in the top header. Manage OFF = the plain site. Manage ON = a big bottom bar ("Add a photo", with an artist picker
+on the homepage) and every photo shows an Edit tag. The setting is remembered while browsing between pages. Tapping a photo opens
 a plain-language window: caption, "Favorite - show this photo first", Save, Delete. Adding a single photo opens its window
-right away to add a caption. "Stop editing" previews as a visitor; "Sign out" ends the session.
+right away to add a caption. "Done" (or the Manage button) turns it off; "Sign out" ends the session.
+
+## Staff menu
+Staff sign in at staff.html (footer "Staff menu" link / lock icon). Managers (TJ, Ariana, test) see Manage, Portfolio, Scheduler blocks; artists see Portfolio and Scheduler. The on-site Manage bar has Staff menu, Done and Sign out.

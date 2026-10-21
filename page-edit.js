@@ -116,7 +116,7 @@
           const sb = await getSb();
           const { error } = await sb.auth.signInWithPassword({ email: email.value.trim(), password: pw.value });
           if(error){ go.disabled = false; say(msg, "That email or password didn't work. Please try again."); return; }
-          say(msg, "Signed in!", true); try{ sessionStorage.setItem("eiManage", "1"); }catch(e){} location.reload();
+          say(msg, "Signed in!", true); location.href = "staff.html";
         }catch(err){ go.disabled = false; say(msg, err.message || "Something went wrong."); }
       }
       go.addEventListener("click", submit);
@@ -126,10 +126,7 @@
     setTimeout(() => document.getElementById("peEmail").focus(), 50);
   }
   const link = document.getElementById("staffSignIn");
-  if(link){
-    if(hasSession){ link.style.display = "none"; }
-    else { addStyles(); link.classList.add("staff-link"); link.addEventListener("click", e => { e.preventDefault(); openSignIn(); }); }
-  }
+  if(link){ link.textContent = "Staff menu"; link.setAttribute("href", "staff.html"); }
 
   if(!hasSession) return;
   init();
@@ -280,32 +277,21 @@
     const bAdd = el("button", { class:"pe-btn big", type:"button", text:"➕ Add a photo" });
     const bBio = el("a", { class:"pe-btn ghost small", href: isManager ? "portfolio-manager.html?manage=1" : "portfolio-manager.html", text:"Edit bio" });
     if(IS_GALLERY) bBio.style.display = "none";
+    const bStaff = el("a", { class:"pe-btn ghost small", href:"staff.html", text:"Staff menu" });
     const bMode = el("button", { class:"pe-btn ghost small", type:"button", text:"Done" });
     const bOut = el("button", { class:"pe-btn ghost small", type:"button", text:"Sign out" });
-    const bar = el("div", { class:"pe-bar" }, [tip, el("div", { class:"pe-row" }, [pick, bAdd]), el("div", { class:"pe-row" }, [bBio, bMode, bOut]), file]);
+    const bar = el("div", { class:"pe-bar" }, [tip, el("div", { class:"pe-row" }, [pick, bAdd]), el("div", { class:"pe-row" }, [bStaff, bBio, bMode, bOut]), file]);
     document.body.appendChild(bar);
 
     /* ----- the Manage button at the top: turns editing on/off ----- */
-    const manageBtn = el("button", { class:"pe-manage", type:"button", "aria-pressed":"false" });
-    const nav = document.querySelector("header nav");
-    if(nav){
-      const actions = nav.querySelector(".nav-actions"), toggle = nav.querySelector(".navtoggle");
-      if(actions) actions.insertBefore(manageBtn, actions.firstChild);
-      else if(toggle) nav.insertBefore(manageBtn, toggle);
-      else nav.appendChild(manageBtn);
-    } else { manageBtn.style.cssText = "position:fixed;top:10px;right:10px;z-index:150;"; document.body.appendChild(manageBtn); }
     async function setMode(on, redraw){
       API.on = on;
       bar.style.display = on ? "flex" : "none";
       document.body.classList.toggle("pe-on", on);
-      manageBtn.classList.toggle("on", on);
-      manageBtn.setAttribute("aria-pressed", String(on));
-      manageBtn.textContent = on ? "Manage: ON" : "Manage";
       try{ sessionStorage.setItem("eiManage", on ? "1" : "0"); }catch(e){}
       if(on) defaultTip(); else close();
       if(redraw !== false) await refresh();
     }
-    manageBtn.addEventListener("click", () => setMode(!API.on));
 
     bAdd.addEventListener("click", () => file.click());
     file.addEventListener("change", async () => {

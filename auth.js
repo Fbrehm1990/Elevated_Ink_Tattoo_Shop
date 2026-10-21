@@ -41,41 +41,14 @@
     (children || []).forEach(c => e.appendChild(c));
     return e;
   }
-  /* ---------- header dropdown ---------- */
+  /* ---------- header "Staff menu" link ---------- */
   function mountMenu(container, current){
     if(!container) return;
     container.classList.add("ea-menu");
-    const btn = el("button", { class:"ea-menu-btn", type:"button", "aria-haspopup":"true", "aria-expanded":"false" });
-    btn.appendChild(document.createTextNode("Menu "));
-    const svgNS = "http://www.w3.org/2000/svg", svg = document.createElementNS(svgNS, "svg");
-    svg.setAttribute("viewBox", "0 0 10 10"); const poly = document.createElementNS(svgNS, "path"); poly.setAttribute("d", "M0 2 L10 2 L5 8 Z"); svg.appendChild(poly); btn.appendChild(svg);
-    const list = el("div", { class:"ea-menu-list", role:"menu" });
-    function item(href, title, sub, key){
-      const a = el("a", { href, role:"menuitem" });
-      a.appendChild(document.createTextNode(title));
-      a.appendChild(el("small", { text:sub }));
-      if(current === key) a.classList.add("current");
-      return a;
-    }
-    list.appendChild(item("scheduler.html", "Scheduler", "Calendar, appointments, blocked time", "scheduler"));
-    list.appendChild(item("portfolio-manager.html", "My Portfolio", "Upload, edit and remove photos", "portfolio"));
-    list.appendChild(item("change-password.html", "Change password", "Choose your own password", "password"));
-    list.appendChild(el("hr"));
-    const so = el("button", { type:"button", role:"menuitem", text:"Sign out" });
-    so.addEventListener("click", async () => { await sb.auth.signOut(); location.href = (current === "portfolio" ? "portfolio-manager.html" : "scheduler.html"); });
-    list.appendChild(so);
-    container.append(btn, list);
-    function close(){ list.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); }
-    btn.addEventListener("click", e => { e.stopPropagation(); const o = list.classList.toggle("open"); btn.setAttribute("aria-expanded", o ? "true" : "false"); });
-    document.addEventListener("click", e => { if(!container.contains(e.target)) close(); });
-    document.addEventListener("keydown", e => { if(e.key === "Escape") close(); });
-    const bar = el("div", { class:"ea-tabs" });
-    [["scheduler.html","Scheduler","scheduler"],["portfolio-manager.html","My Portfolio","portfolio"]].forEach(([h,t,k]) => {
-      const x = el("a", { href:h, class:"ea-tab", text:t }); if(current === k) x.classList.add("current"); bar.appendChild(x);
-    });
-    const nav = document.querySelector("header nav");
-    if(nav) nav.appendChild(bar); else document.body.prepend(bar);
-    const show = s => { container.classList.toggle("show", !!s); bar.classList.toggle("show", !!s); };
+    const a = el("a", { href:"staff.html", class:"ea-menu-btn", text:"Staff menu" });
+    a.style.textDecoration = "none";
+    container.appendChild(a);
+    const show = s => container.classList.toggle("show", !!s);
     sb.auth.getSession().then(({ data }) => { show(data.session); });
     sb.auth.onAuthStateChange((_evt, session) => { show(session); });
   }
