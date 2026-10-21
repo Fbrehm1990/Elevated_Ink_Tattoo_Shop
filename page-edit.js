@@ -265,12 +265,9 @@
 
     /* ----- the bottom bar ----- */
     const tip = el("div", { class:"pe-tip" });
-    const defaultTip = () => { tip.innerHTML = ""; tip.append(
-      document.createTextNode("Manage is on. "),
-      el("b", { text:"Tap any photo marked Edit to change or delete it." }));
-    };
+    const defaultTip = () => { tip.textContent = ""; tip.style.display = "none"; };
     let flashTimer = null;
-    function flash(t){ tip.textContent = t; clearTimeout(flashTimer); flashTimer = setTimeout(defaultTip, 4000); }
+    function flash(t){ tip.textContent = t; tip.style.display = ""; clearTimeout(flashTimer); flashTimer = setTimeout(defaultTip, 4000); }
     defaultTip();
 
     const file = el("input", { type:"file", accept:"image/jpeg,image/png,image/webp", multiple:"multiple", style:"display:none;" });
@@ -278,20 +275,17 @@
     Object.keys(NAMES).filter(canEditArtist).forEach(id => pick.appendChild(el("option", { value:id, text:"For " + NAMES[id] })));
     if(ownId && canEditArtist(ownId)) pick.value = ownId;
     if(!IS_GALLERY) pick.style.display = "none";
-    const bAdd = el("button", { class:"pe-btn big", type:"button", text:"➕ Add a photo" });
-    const bBio = el("a", { class:"pe-btn ghost small", href: isManager ? "portfolio-manager.html?manage=1" : "portfolio-manager.html", text:"Edit bio" });
-    if(IS_GALLERY) bBio.style.display = "none";
-    const bStaff = el("a", { class:"pe-btn ghost small", href:"staff.html", text:"Staff menu" });
-    const bMode = el("button", { class:"pe-btn ghost small", type:"button", text:"Done" });
-    const bOut = el("button", { class:"pe-btn ghost small", type:"button", text:"Sign out" });
-    const bar = el("div", { class:"pe-bar" }, [tip, el("div", { class:"pe-row" }, [pick, bAdd]), el("div", { class:"pe-row" }, [bStaff, bBio, bMode, bOut]), file]);
+    const bAdd = el("button", { class:"pe-btn big", type:"button", text:"➕ Add photo" });
+    const bar = el("div", { class:"pe-bar" }, [tip, el("div", { class:"pe-row" }, [pick, bAdd]), file]);
+    bar.style.cssText = "left:auto;right:14px;bottom:14px;transform:none;width:auto;max-width:300px;padding:8px 10px;border-width:2px;gap:8px;";
+    if(pick.options.length < 2) pick.style.display = "none";
     document.body.appendChild(bar);
 
     /* ----- the Manage button at the top: turns editing on/off ----- */
     async function setMode(on, redraw){
       API.on = on;
       bar.style.display = on ? "flex" : "none";
-      document.body.classList.toggle("pe-on", on);
+      
       try{ sessionStorage.setItem("eiManage", on ? "1" : "0"); }catch(e){}
       if(on) defaultTip(); else close();
       if(redraw !== false) await refresh();
@@ -322,8 +316,6 @@
       // one photo: open it right away so a caption can be added
       if(ok === 1 && lastSrc) API.edit({ file:lastSrc, artist:tgt, caption:"", featured:false });
     });
-    bMode.addEventListener("click", () => setMode(false));
-    bOut.addEventListener("click", async () => { await sb.auth.signOut(); location.reload(); });
 
     await setMode(startOn, startOn); // off: plain site, nothing extra on screen. on: draw Edit tags.
   }

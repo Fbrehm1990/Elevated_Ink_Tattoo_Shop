@@ -142,6 +142,7 @@ function block(href, key, title, desc, onclick){
 }
 
 async function show(){
+  try{ sessionStorage.setItem("eiManage", "0"); }catch(e){}
   const { data: sess } = await sb.auth.getSession();
   if(!sess.session){ $("menu").style.display = "none"; $("signin").style.display = "block"; return; }
   const [roleRes, profRes] = await Promise.all([
