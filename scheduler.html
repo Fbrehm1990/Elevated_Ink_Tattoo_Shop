@@ -175,6 +175,30 @@
 
   .day-panel-title{font-size:18px; margin-bottom:16px;}
   .day-panel-rows{display:flex; flex-direction:column; gap:2px;}
+  .master-bar{display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid var(--line);}
+  .master-tabs{display:flex; gap:10px; flex-wrap:wrap;}
+  .mtab{font:inherit; font-weight:700; font-size:14px; padding:11px 20px; background:transparent; color:var(--ink); border:2px solid var(--ink); cursor:pointer;}
+  .mtab:hover{background:var(--red); border-color:var(--red);}
+  .mtab.active{background:var(--ink); color:var(--paper);}
+  .master-view{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .master-view label{font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.02em; color:var(--gold);}
+  .master-view select, .md-date{font:inherit; font-size:14px; font-weight:600; padding:9px 12px; background:var(--paper); color:var(--ink); border:2px solid var(--line); color-scheme:dark;}
+  .md-summary{color:var(--ink-soft); font-size:14px; margin:0 0 18px;}
+  .md-artist{border:2px solid var(--line); background:var(--paper); margin-bottom:14px;}
+  .md-artist-head{display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; padding:12px 16px; border-bottom:1px solid var(--line);}
+  .md-artist-head h4{margin:0; font-family:'Alfa Slab One',serif; font-weight:400; font-size:18px;}
+  .md-artist-head small{color:var(--ink-soft); font-size:12.5px; margin-left:8px; font-family:'Libre Franklin',sans-serif;}
+  .md-artist-head button{font:inherit; font-weight:600; font-size:12px; padding:6px 12px; border:2px solid var(--ink); background:transparent; color:var(--ink); cursor:pointer;}
+  .md-artist-head button:hover{background:var(--ink); color:var(--paper);}
+  .md-row{padding:10px 16px; border-top:1px solid var(--line); border-left:3px solid var(--green); font-size:14px; display:flex; gap:14px; flex-wrap:wrap;}
+  .md-row:first-of-type{border-top:none;}
+  .md-row.blocked{border-left-color:var(--red); color:var(--ink-soft);}
+  .md-time{font-weight:700; min-width:150px; color:var(--gold);}
+  .md-row.blocked .md-time{color:var(--red-bright);}
+  .md-detail{color:var(--ink); flex:1 1 220px;}
+  .md-detail span{color:var(--ink-soft);}
+  .md-empty{padding:12px 16px; color:var(--ink-soft); font-size:13.5px; font-style:italic;}
+  .viewing-note{color:var(--gold); font-weight:600;}
   .staff-slot{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 10px; border-top:1px solid var(--line); font-size:13px;}
   .staff-slot:first-of-type{border-top:none;}
   .staff-slot.booked{border-left:3px solid var(--green);}
@@ -328,7 +352,7 @@
   <div class="wrap">
     <div class="sec-head">
       <h2>Artist Scheduler</h2>
-      <p>Sign in to view your calendar, add client appointments, and manage your own schedule. Each artist only sees their own bookings.</p>
+      <p>Sign in to view your calendar, add client appointments, and manage your own schedule. Artists see their own bookings; the shop owner can see everyone's.</p>
     </div>
 
     <div class="booking-shell" id="staffLoginShell">
@@ -357,6 +381,31 @@
         <button class="btn btn-ghost" id="staffLogoutBtn" type="button">Sign Out</button>
       </div>
 
+      <div class="master-bar" id="masterBar" style="display:none;">
+        <div class="master-tabs" role="tablist">
+          <button class="mtab active" id="mtabCal" type="button" role="tab" aria-selected="true">Calendar</button>
+          <button class="mtab" id="mtabMaster" type="button" role="tab" aria-selected="false">Master Calendar</button>
+        </div>
+        <div class="master-view" id="viewArtistWrap">
+          <label for="viewArtist">Viewing calendar of</label>
+          <select id="viewArtist"></select>
+        </div>
+      </div>
+
+      <div id="masterPanel" style="display:none;">
+        <div class="cal-header">
+          <button class="cal-nav-btn" id="mdPrev" type="button" aria-label="Previous day">&larr;</button>
+          <span class="cal-month-label" id="mdLabel"></span>
+          <button class="cal-nav-btn" id="mdNext" type="button" aria-label="Next day">&rarr;</button>
+          <input type="date" id="mdDate" class="md-date" aria-label="Pick a date">
+          <button class="btn btn-ghost cal-today-btn" id="mdToday" type="button">Today</button>
+          <button class="btn btn-ghost cal-today-btn" id="mdRefresh" type="button">Refresh</button>
+        </div>
+        <p class="md-summary" id="mdSummary"></p>
+        <div id="mdList"></div>
+      </div>
+
+      <div id="calPanel">
       <div class="cal-header">
         <button class="cal-nav-btn" id="calPrevBtn" type="button" aria-label="Previous month">&larr;</button>
         <span class="cal-month-label" id="calMonthLabel"></span>
@@ -370,6 +419,7 @@
       </div>
 
       <div class="cal-grid" id="calGrid"></div>
+      </div>
     </div>
   </div>
 </section>
@@ -504,10 +554,10 @@
 <script>
 const ARTISTS = [
   { id:"tj",      name:"TJ" },
-  { id:"austin",  name:"Austin" },
   { id:"ariana",  name:"Ariana" },
   { id:"makenzi", name:"Makenzi" },
   { id:"aaron",   name:"Aaron" },
+  { id:"austin",  name:"Austin" },
   { id:"doug",    name:"Doug" }
 ];
 const STUDIO_OPEN_MIN = 11 * 60;   // 11:00 AM, in minutes since midnight
@@ -569,6 +619,7 @@ function fmtDate(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.g
    artist_scheduler_policies.sql).
    ========================================================= */
 let staffArtistId = null;
+let ownArtistId = null, isMaster = false;
 let staffBookingsById = {};
 let calYear, calMonth;          // currently viewed month (calMonth is 0-indexed)
 let selectedDate = null;        // "YYYY-MM-DD" of the day currently open in the day modal
@@ -602,7 +653,8 @@ document.getElementById("staffLoginBtn").addEventListener("click", async () => {
 
 document.getElementById("staffLogoutBtn").addEventListener("click", async () => {
   await supabaseClient.auth.signOut();
-  staffArtistId = null;
+  staffArtistId = null; ownArtistId = null; isMaster = false;
+  stopMasterRefresh(); setupMasterUI();
   selectedDate = null;
   document.getElementById("staffDashboard").style.display = "none";
   document.getElementById("staffLoginShell").style.display = "block";
@@ -629,9 +681,13 @@ async function loadStaffProfile(){
     return;
   }
 
-  staffArtistId = profile.artist_id;
+  staffArtistId = ownArtistId = profile.artist_id;
   const artist = ARTISTS.find(a => a.id === staffArtistId);
   document.getElementById("staffArtistName").textContent = artist ? artist.name : staffArtistId;
+  // TJ (master) sees every artist's calendar and the master day view.
+  const { data: roleRow } = await supabaseClient.from("staff_roles").select("role").maybeSingle();
+  isMaster = !!(roleRow && roleRow.role === "master");
+  setupMasterUI();
   document.getElementById("staffLoginShell").style.display = "none";
   document.getElementById("staffDashboard").style.display = "block";
 
@@ -643,6 +699,96 @@ async function loadStaffProfile(){
   await loadMonthData();
   renderCalendarHeader();
   renderCalendarGrid();
+}
+
+/* ---------- master (TJ): all artists' calendars ---------- */
+let masterDate = null, masterTimer = null, masterTab = "cal";
+function artistName(id){ const a = ARTISTS.find(x => x.id === id); return a ? a.name : id; }
+function setupMasterUI(){
+  document.getElementById("masterBar").style.display = isMaster ? "flex" : "none";
+  if(!isMaster){ showMasterTab("cal"); return; }
+  const sel = document.getElementById("viewArtist"); sel.innerHTML = "";
+  ARTISTS.forEach(a => { const o = document.createElement("option"); o.value = a.id; o.textContent = a.name + (a.id === ownArtistId ? " (me)" : ""); sel.appendChild(o); });
+  sel.value = staffArtistId;
+  showMasterTab("cal");
+}
+function showMasterTab(which){
+  masterTab = which;
+  const m = which === "master";
+  document.getElementById("masterPanel").style.display = m ? "block" : "none";
+  document.getElementById("calPanel").style.display = m ? "none" : "block";
+  document.getElementById("viewArtistWrap").style.display = (isMaster && !m) ? "flex" : "none";
+  document.getElementById("mtabCal").classList.toggle("active", !m);
+  document.getElementById("mtabMaster").classList.toggle("active", m);
+  document.getElementById("mtabCal").setAttribute("aria-selected", String(!m));
+  document.getElementById("mtabMaster").setAttribute("aria-selected", String(m));
+  stopMasterRefresh();
+  if(m){ if(!masterDate) masterDate = fmtDate(new Date()); loadMasterDay(); masterTimer = setInterval(loadMasterDay, 60000); }
+}
+function stopMasterRefresh(){ if(masterTimer){ clearInterval(masterTimer); masterTimer = null; } }
+document.getElementById("mtabCal").addEventListener("click", () => showMasterTab("cal"));
+document.getElementById("mtabMaster").addEventListener("click", () => showMasterTab("master"));
+document.getElementById("viewArtist").addEventListener("change", async e => {
+  staffArtistId = e.target.value; selectedDate = null;
+  await loadMonthData(); renderCalendarHeader(); renderCalendarGrid();
+});
+function shiftMasterDay(n){ const d = new Date(masterDate + "T00:00:00"); d.setDate(d.getDate() + n); masterDate = fmtDate(d); loadMasterDay(); }
+document.getElementById("mdPrev").addEventListener("click", () => shiftMasterDay(-1));
+document.getElementById("mdNext").addEventListener("click", () => shiftMasterDay(1));
+document.getElementById("mdToday").addEventListener("click", () => { masterDate = fmtDate(new Date()); loadMasterDay(); });
+document.getElementById("mdRefresh").addEventListener("click", loadMasterDay);
+document.getElementById("mdDate").addEventListener("change", e => { if(e.target.value){ masterDate = e.target.value; loadMasterDay(); } });
+
+async function loadMasterDay(){
+  if(!isMaster || !masterDate) return;
+  const day = masterDate;
+  const [bk, bl] = await Promise.all([
+    supabaseClient.from("bookings").select("*").eq("appt_date", day),
+    supabaseClient.from("blocked_slots").select("*").eq("appt_date", day)
+  ]);
+  if(day !== masterDate) return; // the date changed while loading
+  const list = document.getElementById("mdList"); list.innerHTML = "";
+  document.getElementById("mdDate").value = day;
+  document.getElementById("mdLabel").textContent = new Date(day + "T00:00:00").toLocaleDateString(undefined, { weekday:"long", month:"long", day:"numeric", year:"numeric" });
+  if(bk.error){
+    document.getElementById("mdSummary").textContent = "Couldn't load appointments (" + bk.error.message + "). Has supabase_roles.sql been run, and is your account set as master?";
+    return;
+  }
+  let total = 0;
+  ARTISTS.forEach(a => {
+    const bMap = {}, kMap = {};
+    (bk.data || []).filter(r => r.artist_id === a.id).forEach(r => bMap[r.appt_time] = r);
+    (bl.data || []).filter(r => r.artist_id === a.id).forEach(r => kMap[r.appt_time] = r);
+    const groups = groupDayItems(bMap, kMap);
+    const appts = groups.filter(g => g.type === "booking");
+    total += appts.length;
+    const card = document.createElement("div"); card.className = "md-artist";
+    const head = document.createElement("div"); head.className = "md-artist-head";
+    const h4 = document.createElement("h4"); h4.textContent = a.name;
+    const small = document.createElement("small"); small.textContent = appts.length + (appts.length === 1 ? " appointment" : " appointments"); h4.appendChild(small);
+    const open = document.createElement("button"); open.type = "button"; open.textContent = "Open " + a.name + "'s calendar";
+    open.addEventListener("click", async () => {
+      staffArtistId = a.id; document.getElementById("viewArtist").value = a.id; selectedDate = null;
+      const d = new Date(day + "T00:00:00"); calYear = d.getFullYear(); calMonth = d.getMonth();
+      showMasterTab("cal"); await loadMonthData(); renderCalendarHeader(); renderCalendarGrid();
+    });
+    head.append(h4, open); card.appendChild(head);
+    if(!groups.length){ const e = document.createElement("div"); e.className = "md-empty"; e.textContent = "Nothing scheduled."; card.appendChild(e); }
+    groups.forEach(g => {
+      const row = document.createElement("div"); row.className = "md-row" + (g.type === "block" ? " blocked" : "");
+      const t = document.createElement("div"); t.className = "md-time"; t.textContent = g.startTime + " \u2013 " + g.endTime;
+      const d = document.createElement("div"); d.className = "md-detail";
+      if(g.type === "booking"){
+        const first = (bMap[g.times[0]] || {});
+        d.textContent = g.name || "Appointment";
+        const extra = [first.phone, g.note].filter(Boolean).join(" \u00b7 ");
+        if(extra){ const sp = document.createElement("span"); sp.textContent = " \u2014 " + extra; d.appendChild(sp); }
+      } else { d.textContent = "Blocked"; }
+      row.append(t, d); card.appendChild(row);
+    });
+    list.appendChild(card);
+  });
+  document.getElementById("mdSummary").textContent = total + (total === 1 ? " appointment" : " appointments") + " across the shop on this day. Updates automatically every minute.";
 }
 
 function monthRange(year, month){
@@ -806,7 +952,8 @@ function renderDayModal(){
 
   const dateObj = new Date(selectedDate + "T00:00:00");
   document.getElementById("dayModalTitle").textContent =
-    dateObj.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+    dateObj.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }) +
+    (staffArtistId !== ownArtistId ? " \u2014 " + artistName(staffArtistId) : "");
 
   const bookingsToday = calBookingsByDate[selectedDate] || {};
   const blocksToday = calBlocksByDate[selectedDate] || {};

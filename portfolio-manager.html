@@ -60,6 +60,9 @@
   .bar{display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:24px;}
   .bar b{color:var(--gold);}
 
+  .as-bar{display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:20px; padding:14px 16px; border:2px solid var(--gold); background:var(--paper);}
+  .as-bar label{font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:.02em; color:var(--gold);}
+  .as-bar select{font:inherit; font-size:15px; font-weight:600; padding:9px 12px; background:var(--paper-alt); color:var(--ink); border:2px solid var(--line); min-width:180px;}
   .tabs{display:flex; gap:12px; margin-bottom:22px; flex-wrap:wrap;}
   .tab{flex:1 1 160px; font:inherit; font-weight:700; font-size:15px; padding:12px 18px; background:transparent; color:var(--ink); border:2px solid var(--ink); cursor:pointer;}
   .tab:hover{background:var(--red); border-color:var(--red);}
@@ -72,6 +75,10 @@
   .profile-card .field label small{font-weight:400; text-transform:none; letter-spacing:0;}
   .profile-card input[type=text], .profile-card textarea{width:100%; padding:12px 14px; font:inherit; background:var(--paper-alt); color:var(--ink); border:2px solid var(--line);}
   .profile-card textarea{min-height:170px; resize:vertical; line-height:1.5;}
+  .pf-photo{display:flex; gap:16px; align-items:center; flex-wrap:wrap;}
+  .pf-thumb{width:96px; aspect-ratio:4/5; background:#2b241a; border:2px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:12px; color:var(--ink-soft); overflow:hidden; text-align:center;}
+  .pf-thumb img{width:100%; height:100%; object-fit:cover;}
+  .pf-photo-btns{display:flex; gap:10px; flex-wrap:wrap;}
   .profile-card input:focus, .profile-card textarea:focus{outline:none; border-color:var(--red);}
   .hint{color:var(--ink-soft); font-size:14px; margin:0 0 10px;}
   .upload-box{border:2px dashed var(--ink-soft); padding:22px; margin-bottom:12px; display:flex; gap:16px; align-items:center; flex-wrap:wrap;}
@@ -150,6 +157,11 @@
         <button class="btn btn-ghost btn-sm" id="logoutBtn" type="button">Sign Out</button>
       </div>
 
+      <div class="as-bar" id="asBar" style="display:none;">
+        <label for="asSelect">Managing portfolio for</label>
+        <select id="asSelect"></select>
+      </div>
+
       <div class="tabs" role="tablist">
         <button class="tab active" id="tabAdd" type="button" role="tab" aria-selected="true">Add Images</button>
         <button class="tab" id="tabEdit" type="button" role="tab" aria-selected="false">Edit Portfolio</button>
@@ -172,6 +184,17 @@
         <div class="field"><label for="pfTagline">Short intro <small id="cTagline"></small></label><input type="text" id="pfTagline" maxlength="160" placeholder="One line shown under “About”"></div>
         <div class="field"><label for="pfBio">Bio <small id="cBio"></small></label><textarea id="pfBio" maxlength="2000" placeholder="Tell clients about your style, experience and what you love to tattoo. Press Enter twice to start a new paragraph."></textarea></div>
         <div class="field"><label for="pfSpec">Specialties <small>separate with commas</small></label><input type="text" id="pfSpec" maxlength="200" placeholder="Traditional, Color realism, Lettering"></div>
+        <div class="field">
+          <label>Artist photo <small>shown to the right of the bio</small></label>
+          <div class="pf-photo">
+            <div class="pf-thumb" id="pfThumb">No photo</div>
+            <div class="pf-photo-btns">
+              <button class="btn btn-ghost btn-sm" id="pfPhotoPick" type="button">Choose photo</button>
+              <button class="btn btn-danger btn-sm" id="pfPhotoClear" type="button" style="display:none;">Remove photo</button>
+              <input type="file" id="pfPhotoFile" accept="image/jpeg,image/png,image/webp" style="display:none;">
+            </div>
+          </div>
+        </div>
         <div class="field"><label for="pfIg">Instagram handle</label><input type="text" id="pfIg" maxlength="31" placeholder="yourhandle" autocapitalize="off" autocorrect="off"></div>
         <div class="msg" id="pfMsg" role="status"></div>
         <button class="btn btn-primary" id="pfSave" type="button">Save profile</button>
@@ -213,11 +236,11 @@ const SUPABASE_ANON_KEY = "sb_publishable__Qic8J69dJyd76lnVw2m-A_OaF0R9nO";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 ArtistAuth.init(sb);
 ArtistAuth.mountMenu(document.getElementById("artistMenu"), "portfolio");
-const ARTISTS = { tj:"TJ", austin:"Austin", ariana:"Ariana", makenzi:"Makenzi", aaron:"Aaron", doug:"Doug" };
+const ARTISTS = { tj:"TJ", ariana:"Ariana", makenzi:"Makenzi", aaron:"Aaron", austin:"Austin", doug:"Doug" };
 const BUCKET = "portfolio";
 const MAX_SIDE = 1600;
 
-let artistId = null, items = [];   // items: every photo for this artist, visible or removed
+let artistId = null, ownArtistId = null, items = [];   // items: every photo for this artist, visible or removed
 const $ = id => document.getElementById(id);
 
 function say(el, text, ok){ el.textContent = text || ""; el.classList.toggle("ok", !!ok); }
@@ -238,6 +261,16 @@ $("logoutBtn").addEventListener("click", async () => {
   $("manager").style.display = "none"; $("loginShell").style.display = "block"; $("password").value = "";
 });
 
+function setArtistLabels(){
+  $("artistName").textContent = ARTISTS[artistId] || artistId;
+  $("viewPage").href = artistId + ".html";
+}
+$("asSelect").addEventListener("change", async () => {
+  artistId = $("asSelect").value; items = []; setArtistLabels();
+  say($("pfMsg"), ""); say($("mgrMsg"), "");
+  await load(); loadProfileText();
+});
+
 async function start(){
   const { data: sess } = await sb.auth.getSession();
   if(!sess.session){ $("loginShell").style.display = "block"; return; }
@@ -247,9 +280,15 @@ async function start(){
     say($("loginMsg"), "Signed in, but this account isn't linked to an artist page yet. Please ask the shop owner to finish setting up your account.");
     return;
   }
-  artistId = profile.artist_id;
-  $("artistName").textContent = ARTISTS[artistId] || artistId;
-  $("viewPage").href = artistId + ".html";
+  artistId = ownArtistId = profile.artist_id;
+  // TJ (master) and Ariana (social media manager) can work on any artist's portfolio.
+  const { data: roleRow } = await sb.from("staff_roles").select("role").maybeSingle();
+  if(roleRow && (roleRow.role === "master" || roleRow.role === "social")){
+    const sel = $("asSelect"); sel.innerHTML = "";
+    Object.entries(ARTISTS).forEach(([id, name]) => { const o = document.createElement("option"); o.value = id; o.textContent = name + (id === ownArtistId ? " (me)" : ""); sel.appendChild(o); });
+    sel.value = artistId; $("asBar").style.display = "flex";
+  }
+  setArtistLabels();
   $("loginShell").style.display = "none"; $("manager").style.display = "block";
   await load();
   loadProfileText();
@@ -257,18 +296,40 @@ async function start(){
 
 
 /* ---------- profile text (bio etc.) ---------- */
+let pfPhoto = "";
 const PF = { role:"pfRole", tagline:"pfTagline", bio:"pfBio", specialties:"pfSpec", instagram:"pfIg" };
 function counts(){ $("cBio").textContent = $("pfBio").value.length + " / 2000"; $("cTagline").textContent = $("pfTagline").value.length + " / 160"; }
 $("pfBio").addEventListener("input", counts); $("pfTagline").addEventListener("input", counts);
+function showPfPhoto(){
+  const t = $("pfThumb"); t.innerHTML = "";
+  if(pfPhoto){ const i = document.createElement("img"); i.src = pfPhoto; i.alt = "Artist photo"; t.appendChild(i); } else { t.textContent = "No photo"; }
+  $("pfPhotoClear").style.display = pfPhoto ? "inline-block" : "none";
+}
+$("pfPhotoPick").addEventListener("click", () => $("pfPhotoFile").click());
+$("pfPhotoClear").addEventListener("click", () => { pfPhoto = ""; showPfPhoto(); say($("pfMsg"), "Photo removed. Press Save profile to publish the change."); });
+$("pfPhotoFile").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = ""; if(!f) return;
+  say($("pfMsg"), "Uploading photo…");
+  try{
+    const blob = await toJpeg(f, 1000);
+    const path = artistId + "/profile-" + Date.now() + ".jpg";
+    const up = await sb.storage.from(BUCKET).upload(path, blob, { contentType:"image/jpeg", upsert:false });
+    if(up.error) throw up.error;
+    pfPhoto = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl; showPfPhoto();
+    say($("pfMsg"), "Photo uploaded. Press Save profile to publish it.", true);
+  }catch(err){ say($("pfMsg"), "Couldn't upload photo: " + (err.message || err)); }
+});
 async function loadProfileText(){
   const { data, error } = await sb.from("artist_bios").select("*").eq("artist_id", artistId).maybeSingle();
   if(error){ say($("pfMsg"), "Couldn't load your profile text (" + error.message + "). Has supabase_profiles.sql been run?"); return; }
   Object.entries(PF).forEach(([k, id]) => { $(id).value = (data && data[k]) || ""; });
+  pfPhoto = (data && data.photo) || ""; showPfPhoto();
   counts();
 }
 $("pfSave").addEventListener("click", async () => {
   const row = { artist_id: artistId, updated_at: new Date().toISOString() };
   Object.entries(PF).forEach(([k, id]) => { row[k] = $(id).value.trim(); });
+  row.photo = pfPhoto;
   row.instagram = row.instagram.replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/[\/?].*$/, "");
   if(row.instagram && !/^[A-Za-z0-9._]{1,30}$/.test(row.instagram)){ say($("pfMsg"), "Instagram handle can only use letters, numbers, periods and underscores."); return; }
   row.specialties = row.specialties.split(",").map(s => s.trim()).filter(Boolean).slice(0, 8).join(", ");
@@ -415,10 +476,10 @@ $("fileInput").addEventListener("change", async e => {
   if(ok && !fail) showTab("edit");
 });
 
-async function toJpeg(file){
+async function toJpeg(file, maxSide){
   if(!/^image\/(jpeg|png|webp)$/.test(file.type)) throw new Error(file.name + " isn't a JPG, PNG or WebP image.");
   const bmp = await createImageBitmap(file);
-  const scale = Math.min(1, MAX_SIDE / Math.max(bmp.width, bmp.height));
+  const scale = Math.min(1, (maxSide || MAX_SIDE) / Math.max(bmp.width, bmp.height));
   const w = Math.round(bmp.width * scale), h = Math.round(bmp.height * scale);
   const canvas = document.createElement("canvas"); canvas.width = w; canvas.height = h;
   const ctx = canvas.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, h); ctx.drawImage(bmp, 0, 0, w, h);

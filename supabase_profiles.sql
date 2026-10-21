@@ -15,9 +15,11 @@ create table if not exists artist_bios (
   bio         text not null default '',
   specialties text not null default '',     -- comma-separated, e.g. "Traditional, Color realism"
   instagram   text not null default '',     -- handle only, no @
+  photo       text not null default '',     -- public URL of the artist's portrait
   updated_at  timestamptz not null default now()
 );
 
+alter table artist_bios add column if not exists photo text not null default '';
 alter table artist_bios enable row level security;
 
 drop policy if exists "Anyone can view artist profiles" on artist_bios;

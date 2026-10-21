@@ -165,3 +165,22 @@ change their own row.
 
 Every page's footer is centered: logo, contact info, then a **Legal** heading with the Terms,
 Privacy and Accessibility links centered beneath it.
+
+## Roles: master calendar and portfolio managers
+
+Run `supabase_roles.sql` once (after `supabase_portfolio.sql` and `supabase_profiles.sql`), then
+uncomment and run the two lines at the bottom with TJ's and Ariana's sign-in emails.
+- **TJ (master):** Scheduler -> **Master Calendar** tab shows every artist's appointments for a chosen day
+  (reads the same bookings table, so anything an artist schedules appears there automatically).
+  The **Calendar** tab has a "Viewing calendar of" dropdown to open and edit any artist's calendar.
+  My Portfolio has a "Managing portfolio for" dropdown to add/edit/delete photos and profile text for any artist.
+- **Ariana (social media manager):** same "Managing portfolio for" dropdown on My Portfolio. Her scheduler is her own calendar.
+- Roles can only be granted in the Supabase SQL Editor, never from the website.
+
+## Other content
+
+- Hero slogan: "Rise Above". Artist order everywhere: TJ, Ariana, Makenzi, Aaron, Austin, Doug.
+- Artist pages show an artist photo to the right of the bio (upload it under Profile & bio). TJ and Ariana
+  default to their expo photos until they upload one.
+- Homepage gallery: newest uploads (any artist) appear first, then each artist's featured photos.
+- FAQ section rewritten, followed by the plain note "We do not sell tattoo supplies."
