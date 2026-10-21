@@ -49,6 +49,10 @@
     st.textContent = `
     .gcard.editable{cursor:pointer;}
     .gcard.editable::after{content:"\\270E  Edit"; position:absolute; top:8px; right:8px; background:#d4a94f; color:#221c14; font:700 13px 'Libre Franklin',sans-serif; padding:6px 11px; z-index:2;}
+    .pe-manage{font:700 14px 'Libre Franklin',sans-serif; padding:9px 16px; border:2px solid #d4a94f; color:#d4a94f; background:transparent; cursor:pointer; white-space:nowrap; transition:all .2s; margin-right:10px; flex-shrink:0;}
+    .pe-manage:hover{background:#d4a94f; color:#221c14;}
+    .pe-manage.on{background:#d4a94f; color:#221c14;}
+    @media(max-width:600px){ .pe-manage{padding:8px 11px; font-size:13px; margin-right:6px;} }
     .staff-link{display:inline-block; margin-top:6px; font:12px 'Libre Franklin',sans-serif; color:#b9ab8c; text-decoration:underline; opacity:.8;}
     .staff-link:hover{color:#ece0c3; opacity:1;}
     .pe-bar{position:fixed; left:50%; bottom:14px; transform:translateX(-50%); z-index:150; background:#221c14; border:3px solid #d4a94f; padding:12px 14px; display:flex; flex-direction:column; align-items:center; gap:10px; width:calc(100vw - 24px); max-width:640px; font-family:'Libre Franklin',sans-serif; box-shadow:0 8px 30px rgba(0,0,0,.55);}
@@ -112,7 +116,7 @@
           const sb = await getSb();
           const { error } = await sb.auth.signInWithPassword({ email: email.value.trim(), password: pw.value });
           if(error){ go.disabled = false; say(msg, "That email or password didn't work. Please try again."); return; }
-          say(msg, "Signed in!", true); location.reload();
+          say(msg, "Signed in!", true); try{ sessionStorage.setItem("eiManage", "1"); }catch(e){} location.reload();
         }catch(err){ go.disabled = false; say(msg, err.message || "Something went wrong."); }
       }
       go.addEventListener("click", submit);
@@ -157,8 +161,9 @@
     }
 
     addStyles();
-    document.body.classList.add("pe-on");
-    const API = window.EIEdit = { on:true, canEdit: canEditArtist };
+    let startOn = false;
+    try{ startOn = sessionStorage.getItem("eiManage") === "1"; }catch(e){}
+    const API = window.EIEdit = { on:startOn, canEdit: canEditArtist };
 
     /* ----- data helpers ----- */
     let starterData = null;
@@ -260,8 +265,8 @@
     /* ----- the bottom bar ----- */
     const tip = el("div", { class:"pe-tip" });
     const defaultTip = () => { tip.innerHTML = ""; tip.append(
-      document.createTextNode(API.on ? "You are editing. " : "Editing is paused. "),
-      el("b", { text: API.on ? "Tap any photo marked Edit to change or delete it." : "Press \"Start editing\" to change photos." }));
+      document.createTextNode("Manage is on. "),
+      el("b", { text:"Tap any photo marked Edit to change or delete it." }));
     };
     let flashTimer = null;
     function flash(t){ tip.textContent = t; clearTimeout(flashTimer); flashTimer = setTimeout(defaultTip, 4000); }
@@ -275,9 +280,32 @@
     const bAdd = el("button", { class:"pe-btn big", type:"button", text:"➕ Add a photo" });
     const bBio = el("a", { class:"pe-btn ghost small", href: isManager ? "portfolio-manager.html?manage=1" : "portfolio-manager.html", text:"Edit bio" });
     if(IS_GALLERY) bBio.style.display = "none";
-    const bMode = el("button", { class:"pe-btn ghost small", type:"button", text:"Stop editing" });
+    const bMode = el("button", { class:"pe-btn ghost small", type:"button", text:"Done" });
     const bOut = el("button", { class:"pe-btn ghost small", type:"button", text:"Sign out" });
-    document.body.appendChild(el("div", { class:"pe-bar" }, [tip, el("div", { class:"pe-row" }, [pick, bAdd]), el("div", { class:"pe-row" }, [bBio, bMode, bOut]), file]));
+    const bar = el("div", { class:"pe-bar" }, [tip, el("div", { class:"pe-row" }, [pick, bAdd]), el("div", { class:"pe-row" }, [bBio, bMode, bOut]), file]);
+    document.body.appendChild(bar);
+
+    /* ----- the Manage button at the top: turns editing on/off ----- */
+    const manageBtn = el("button", { class:"pe-manage", type:"button", "aria-pressed":"false" });
+    const nav = document.querySelector("header nav");
+    if(nav){
+      const actions = nav.querySelector(".nav-actions"), toggle = nav.querySelector(".navtoggle");
+      if(actions) actions.insertBefore(manageBtn, actions.firstChild);
+      else if(toggle) nav.insertBefore(manageBtn, toggle);
+      else nav.appendChild(manageBtn);
+    } else { manageBtn.style.cssText = "position:fixed;top:10px;right:10px;z-index:150;"; document.body.appendChild(manageBtn); }
+    async function setMode(on, redraw){
+      API.on = on;
+      bar.style.display = on ? "flex" : "none";
+      document.body.classList.toggle("pe-on", on);
+      manageBtn.classList.toggle("on", on);
+      manageBtn.setAttribute("aria-pressed", String(on));
+      manageBtn.textContent = on ? "Manage: ON" : "Manage";
+      try{ sessionStorage.setItem("eiManage", on ? "1" : "0"); }catch(e){}
+      if(on) defaultTip(); else close();
+      if(redraw !== false) await refresh();
+    }
+    manageBtn.addEventListener("click", () => setMode(!API.on));
 
     bAdd.addEventListener("click", () => file.click());
     file.addEventListener("change", async () => {
@@ -304,11 +332,9 @@
       // one photo: open it right away so a caption can be added
       if(ok === 1 && lastSrc) API.edit({ file:lastSrc, artist:tgt, caption:"", featured:false });
     });
-    bMode.addEventListener("click", async () => {
-      API.on = !API.on; bMode.textContent = API.on ? "Stop editing" : "Start editing"; defaultTip(); await refresh();
-    });
+    bMode.addEventListener("click", () => setMode(false));
     bOut.addEventListener("click", async () => { await sb.auth.signOut(); location.reload(); });
 
-    await refresh(); // re-draw so photos get their Edit tags
+    await setMode(startOn, startOn); // off: plain site, nothing extra on screen. on: draw Edit tags.
   }
 })();
