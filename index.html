@@ -473,7 +473,7 @@
       <button class="gtab" data-filter="makenzi">Makenzi</button>
       <button class="gtab" data-filter="aaron">Aaron</button>
       <button class="gtab" data-filter="austin">Austin</button>
-      <button class="gtab" data-filter="doug">Doug</button>
+      <button class="gtab" data-filter="doug" hidden>Doug</button>
     </div>
 
     <div class="gallery-grid" id="galleryGrid"></div>
@@ -579,7 +579,7 @@ const GALLERY_FALLBACK = [
   { artist:"austin", img:"images/portfolio/austin-018.jpg" }
 ];
 const DOUG_CARD = { artist:"doug", title:"Crane in flight", svg: svgCrane() };
-let GALLERY = [...GALLERY_FALLBACK, DOUG_CARD];
+let GALLERY = [...GALLERY_FALLBACK];
 
 function svgWrap(inner, accent){
   return `<svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">
@@ -647,8 +647,8 @@ async function loadFeatured(){
     [...uploads, ...starters].filter(f => !seen.has(f)).slice(0, 4).forEach(f => { seen.add(f); feat.push({ artist:a, img:f }); });
   });
   if(feat.length){
-    const hasDoug = feat.some(f => f.artist === "doug");
-    GALLERY = hasDoug ? feat : [...feat, DOUG_CARD];
+    GALLERY = feat;
+    const dt = document.querySelector('.gtab[data-filter="doug"]'); if(dt) dt.hidden = !feat.some(f => f.artist === "doug");
     renderGallery(activeFilter);
   }
 }
@@ -659,26 +659,44 @@ loadFeatured();
 <script>
 /* ---------- Spotlight slideshow ---------- */
 (function(){
-  const SLIDES = [
+  const DEFAULT_SLIDES = [
     { img:"spotlight/team.jpg", fit:"contain", alt:"The Elevated Ink artists together at the shop", title:"The Elevated Ink team", text:"The artists behind the chair at Elevated Ink in Martinsburg, WV.", link:"#about", linkText:"Meet the artists \u2192" },
     { img:"spotlight/tj-expo.jpg", alt:"TJ standing behind a table of Battlefield Tattoo Expo award plaques", title:"TJ at the Battlefield Tattoo Expo", text:"Nine awards, including Tattoo of the Day.", link:"tj.html", linkText:"See TJ\u2019s portfolio \u2192" },
     { img:"spotlight/ariana-expo.jpg", alt:"Ariana holding a 1st place Best Large Color plaque at the Battlefield Tattoo Expo", title:"Ariana at the Battlefield Tattoo Expo", text:"Taking home 1st Place, Best Large Color.", link:"ariana.html", linkText:"See Ariana\u2019s portfolio \u2192" }
   ];
+  let SLIDES = DEFAULT_SLIDES;
+  window.EISlideDefaults = DEFAULT_SLIDES;
   const track = document.getElementById("spotTrack"), dots = document.getElementById("spotDots"), frame = document.getElementById("spotFrame");
   const titleEl = document.getElementById("spotTitle"), textEl = document.getElementById("spotText"), linkEl = document.getElementById("spotLink");
   let idx = 0, timer = null;
-  SLIDES.forEach((s, i) => {
-    const fig = document.createElement("figure");
-    fig.className = "spot-slide" + (s.fit === "contain" ? " contain" : "");
-    const im = document.createElement("img");
-    im.src = s.img; im.alt = s.alt;
-    fig.appendChild(im); track.appendChild(fig);
-    const d = document.createElement("button");
-    d.type = "button"; d.className = "spot-dot"; d.setAttribute("aria-label", "Show photo " + (i + 1));
-    d.addEventListener("click", () => { go(i); restart(); });
-    dots.appendChild(d);
-  });
+  function build(){
+    track.innerHTML = ""; dots.innerHTML = "";
+    SLIDES.forEach((s, i) => {
+      const fig = document.createElement("figure");
+      fig.className = "spot-slide" + (s.fit === "contain" ? " contain" : "");
+      const im = document.createElement("img");
+      im.src = s.img; im.alt = s.alt || s.title || "";
+      fig.appendChild(im); track.appendChild(fig);
+      const d = document.createElement("button");
+      d.type = "button"; d.className = "spot-dot"; d.setAttribute("aria-label", "Show photo " + (i + 1));
+      d.addEventListener("click", () => { go(i); restart(); });
+      dots.appendChild(d);
+    });
+    go(Math.min(idx, SLIDES.length - 1));
+  }
+  async function loadSlides(){
+    try{
+      const r = await fetch(SB_URL + "/rest/v1/site_slides?select=*&order=position.asc", { headers:{ apikey: SB_KEY } });
+      if(r.ok){ const rows = await r.json();
+        if(rows.length) SLIDES = rows.map(x => ({ img:x.img, fit:x.fit || undefined, alt:x.title, title:x.title || "", text:x.text || "", link:x.link || "", linkText:x.link_text || "" }));
+        else SLIDES = DEFAULT_SLIDES;
+      }
+    }catch(e){}
+    build();
+  }
+  window.EISlides = { reload: loadSlides };
   function go(i){
+    if(!SLIDES.length) return;
     idx = (i + SLIDES.length) % SLIDES.length;
     track.style.transform = "translateX(-" + (idx * 100) + "%)";
     [...dots.children].forEach((d, k) => d.classList.toggle("active", k === idx));
@@ -699,7 +717,7 @@ loadFeatured();
   frame.addEventListener("touchstart", e => { x0 = e.touches[0].clientX; stop(); }, {passive:true});
   frame.addEventListener("touchend", e => { if(x0 !== null){ const dx = e.changedTouches[0].clientX - x0; if(Math.abs(dx) > 40) go(idx + (dx < 0 ? 1 : -1)); } x0 = null; start(); });
   document.addEventListener("visibilitychange", () => document.hidden ? stop() : start());
-  go(0); start();
+  build(); start(); loadSlides();
 })();
 </script>
 

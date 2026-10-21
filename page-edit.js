@@ -287,6 +287,7 @@
       bar.style.display = on ? "flex" : "none";
       
       try{ sessionStorage.setItem("eiManage", on ? "1" : "0"); }catch(e){}
+      if(slideBtn) slideBtn.style.display = on ? "block" : "none";
       if(on) defaultTip(); else close();
       if(redraw !== false) await refresh();
     }
@@ -316,6 +317,96 @@
       // one photo: open it right away so a caption can be added
       if(ok === 1 && lastSrc) API.edit({ file:lastSrc, artist:tgt, caption:"", featured:false });
     });
+
+
+    /* ----- slideshow editor (homepage, managers only) ----- */
+    let slideBtn = null;
+    if(IS_GALLERY && isManager && document.getElementById("spotFrame")){
+      slideBtn = el("button", { type:"button", class:"pe-slide-edit", text:"✎ Edit slideshow" });
+      slideBtn.style.cssText = "position:absolute;top:10px;right:10px;z-index:5;background:#d4a94f;color:#221c14;border:0;font:700 13px 'Libre Franklin',sans-serif;padding:7px 12px;cursor:pointer;display:none;";
+      const fr = document.getElementById("spotFrame"); fr.style.position = fr.style.position || "relative"; fr.appendChild(slideBtn);
+      let rows = [], removed = [], sov = null, listEl, smsg, sSave;
+      const draw = () => {
+        listEl.innerHTML = "";
+        rows.forEach((r, i) => {
+          const th = el("img", { src:r.img, alt:"" }); th.style.cssText = "width:84px;height:64px;object-fit:cover;margin:0;flex-shrink:0;";
+          const t = el("input", { type:"text", placeholder:"Title", value:r.title || "" }); t.style.marginBottom = "6px";
+          t.addEventListener("input", () => r.title = t.value);
+          const x = el("input", { type:"text", placeholder:"Short description", value:r.text || "" }); x.style.marginBottom = "8px";
+          x.addEventListener("input", () => r.text = x.value);
+          const up = el("button", { type:"button", class:"pe-btn ghost small", text:"↑" }), dn = el("button", { type:"button", class:"pe-btn ghost small", text:"↓" });
+          const ph = el("button", { type:"button", class:"pe-btn ghost small", text:"Change photo" }), rm = el("button", { type:"button", class:"pe-btn danger small", text:"Remove" });
+          up.disabled = i === 0; dn.disabled = i === rows.length - 1;
+          up.addEventListener("click", () => { [rows[i-1], rows[i]] = [rows[i], rows[i-1]]; draw(); });
+          dn.addEventListener("click", () => { [rows[i+1], rows[i]] = [rows[i], rows[i+1]]; draw(); });
+          rm.addEventListener("click", () => { if(rm.dataset.sure !== "1"){ rm.dataset.sure = "1"; rm.textContent = "Yes, remove"; return; } if(r.storage_path) removed.push(r.storage_path); if(r.id) r._del = true; if(r.id) removedIds.push(r.id); rows.splice(i, 1); draw(); });
+          ph.addEventListener("click", () => pickFile(async f => {
+            smsg.textContent = "Uploading photo…";
+            try{
+              const blob = await toJpeg(f, 2000);
+              const path = "slides/" + Date.now() + "-" + Math.random().toString(36).slice(2, 8) + ".jpg";
+              const u = await sb.storage.from(BUCKET).upload(path, blob, { contentType:"image/jpeg", cacheControl:"31536000" });
+              if(u.error) throw u.error;
+              if(r.storage_path) removed.push(r.storage_path);
+              r.img = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl; r.storage_path = path; r.fit = null; smsg.textContent = ""; draw();
+            }catch(err){ smsg.textContent = err.message || "That photo didn't work."; }
+          }));
+          listEl.appendChild(el("div", { style:"border:1px solid #443a2c;padding:12px;margin-bottom:12px;" }, [
+            el("div", { style:"display:flex;gap:12px;align-items:flex-start;margin-bottom:8px;" }, [th, el("div", { style:"flex:1;min-width:0;" }, [t, x])]),
+            el("div", { class:"pe-row", style:"justify-content:flex-start;" }, [up, dn, ph, rm])]));
+        });
+      };
+      let removedIds = [];
+      const sfile = el("input", { type:"file", accept:"image/jpeg,image/png,image/webp", style:"display:none;" });
+      let onFile = null;
+      sfile.addEventListener("change", () => { const f = sfile.files[0]; sfile.value = ""; if(f && onFile) onFile(f); });
+      const pickFile = cb => { onFile = cb; sfile.click(); };
+      async function openSlides(){
+        addStyles();
+        if(!sov){
+          listEl = el("div"); smsg = el("div", { class:"pe-msg", role:"status" });
+          const add = el("button", { type:"button", class:"pe-btn ghost", text:"➕ Add a slide" });
+          const cancel = el("button", { type:"button", class:"pe-btn ghost", text:"Cancel" });
+          sSave = el("button", { type:"button", class:"pe-btn big", text:"Save" });
+          sov = el("div", { class:"pe-overlay", role:"dialog", "aria-modal":"true" }, [el("div", { class:"pe-box", style:"max-width:560px;" }, [
+            el("h3", { text:"Edit slideshow" }), el("p", { class:"sub", text:"Change the pictures and words in the homepage Spotlight. Use the arrows to reorder." }),
+            listEl, add, el("div", { style:"height:14px;" }), smsg, el("div", { class:"pe-actions" }, [cancel, sSave]), sfile])]);
+          document.body.appendChild(sov);
+          cancel.addEventListener("click", () => sov.classList.remove("open"));
+          add.addEventListener("click", () => pickFile(async f => {
+            smsg.textContent = "Uploading photo…";
+            try{
+              const blob = await toJpeg(f, 2000);
+              const path = "slides/" + Date.now() + "-" + Math.random().toString(36).slice(2, 8) + ".jpg";
+              const u = await sb.storage.from(BUCKET).upload(path, blob, { contentType:"image/jpeg", cacheControl:"31536000" });
+              if(u.error) throw u.error;
+              rows.push({ img: sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl, storage_path:path, title:"", text:"", link:"", link_text:"" }); smsg.textContent = ""; draw();
+            }catch(err){ smsg.textContent = err.message || "That photo didn't work."; }
+          }));
+          sSave.addEventListener("click", async () => {
+            sSave.disabled = true; smsg.textContent = "Saving…";
+            try{
+              if(removedIds.length){ const d = await sb.from("site_slides").delete().in("id", removedIds); if(d.error) throw d.error; }
+              for(let i = 0; i < rows.length; i++){
+                const r = rows[i];
+                const rec = { position:i, img:r.img, storage_path:r.storage_path || null, fit:r.fit || null, title:(r.title || "").trim(), text:(r.text || "").trim(), link:r.link || "", link_text:r.link_text || "" };
+                const q = r.id ? sb.from("site_slides").update(rec).eq("id", r.id) : sb.from("site_slides").insert(rec);
+                const res = await q; if(res.error) throw res.error;
+              }
+              if(removed.length) await sb.storage.from(BUCKET).remove(removed);
+              sov.classList.remove("open"); if(window.EISlides) await window.EISlides.reload(); flash("Slideshow saved ✓");
+            }catch(err){ smsg.textContent = "Sorry, that didn't save (" + (err.message || err) + ")."; }
+            sSave.disabled = false;
+          });
+        }
+        smsg.textContent = "Loading…"; removed = []; removedIds = []; sov.classList.add("open");
+        const { data, error } = await sb.from("site_slides").select("*").order("position", { ascending:true });
+        if(error){ smsg.textContent = "Couldn't load the slideshow (" + error.message + "). Has supabase_slides.sql been run?"; return; }
+        rows = (data && data.length) ? data.map(d => Object.assign({}, d)) : (window.EISlideDefaults || []).map(d => ({ img:d.img, fit:d.fit || null, title:d.title, text:d.text, link:d.link, link_text:d.linkText }));
+        smsg.textContent = ""; draw();
+      }
+      slideBtn.addEventListener("click", e => { e.stopPropagation(); openSlides(); });
+    }
 
     await setMode(startOn, startOn); // off: plain site, nothing extra on screen. on: draw Edit tags.
   }

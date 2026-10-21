@@ -207,3 +207,5 @@ right away to add a caption. "Done" (or the Manage button) turns it off; "Sign o
 
 ## Staff menu
 Staff sign in at staff.html (footer "Staff menu" link / lock icon). Managers (TJ, Ariana, test) see Manage, Portfolio, Scheduler blocks; artists see Portfolio and Scheduler. The on-site Manage bar has Staff menu, Done and Sign out.
+
+Slideshow editing: run supabase_slides.sql once, then managers see "Edit slideshow" on the homepage in Manage mode.
