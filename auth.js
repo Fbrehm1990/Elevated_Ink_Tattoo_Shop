@@ -21,7 +21,7 @@
     .ea-tabs{position:static; transform:none; order:3; flex:0 0 100%; justify-content:center; gap:40px; padding:10px 0 12px; margin-top:8px; border-top:1px solid #443a2c;}
   }
   .ea-menu{position:relative; display:none;}
-  .ea-menu.show{display:block;}
+  .ea-menu.show{display:flex; gap:8px; align-items:center;}
   .ea-menu-btn{font-family:'Libre Franklin',sans-serif; font-weight:600; font-size:13px; background:transparent; color:#ece0c3; border:2px solid #ece0c3; padding:8px 14px; cursor:pointer; display:flex; gap:8px; align-items:center;}
   .ea-menu-btn:hover, .ea-menu-btn[aria-expanded="true"]{background:#ece0c3; color:#17130e;}
   .ea-menu-btn svg{width:10px; height:10px; fill:currentColor;}
@@ -41,13 +41,15 @@
     (children || []).forEach(c => e.appendChild(c));
     return e;
   }
-  /* ---------- header: centered Portfolio / Scheduler / Manage tabs + Staff menu link ---------- */
+  /* ---------- header: centered Portfolio / Scheduler / Manage tabs + account links ---------- */
   function mountMenu(container, current){
     if(!container) return;
     container.classList.add("ea-menu");
-    const a = el("a", { href:"staff.html", class:"ea-menu-btn", text:"Staff menu" });
+    const a = el("a", { href:"change-password.html", class:"ea-menu-btn", text:"Change password" });
     a.style.textDecoration = "none";
-    container.appendChild(a);
+    const so = el("button", { type:"button", class:"ea-menu-btn", text:"Sign out" });
+    so.addEventListener("click", async () => { try{ sessionStorage.removeItem("eiManage"); }catch(e){} await sb.auth.signOut(); location.href = "index.html"; });
+    container.append(a, so);
     const bar = el("div", { class:"ea-tabs" });
     const tab = (h, t, k) => { const x = el("a", { href:h, class:"ea-tab", text:t }); if(current === k) x.classList.add("current"); bar.appendChild(x); return x; };
     const tp = tab("portfolio-manager.html", "Portfolio", "portfolio");

@@ -126,7 +126,7 @@
           const sb = await getSb();
           const { error } = await sb.auth.signInWithPassword({ email: email.value.trim(), password: pw.value });
           if(error){ go.disabled = false; say(msg, "That email or password didn't work. Please try again."); return; }
-          say(msg, "Signed in!", true); location.href = "staff.html";
+          say(msg, "Signed in!", true); location.reload();
         }catch(err){ go.disabled = false; say(msg, err.message || "Something went wrong."); }
       }
       go.addEventListener("click", submit);
@@ -136,7 +136,13 @@
     setTimeout(() => document.getElementById("peEmail").focus(), 50);
   }
   const link = document.getElementById("staffSignIn");
-  if(link){ link.textContent = "Staff menu"; link.setAttribute("href", "staff.html"); }
+  const lock = document.querySelector("a.nav-icon-btn");
+  [link, lock].forEach(a => {
+    if(!a) return;
+    if(hasSession){ a.style.display = "none"; return; }
+    addStyles(); a.addEventListener("click", e => { e.preventDefault(); openSignIn(); });
+  });
+  if(link && !hasSession) link.textContent = "Staff sign-in";
 
   if(!hasSession) return;
   init();
@@ -163,11 +169,14 @@
       const strip = el("div", { class:"pe-top" }, [
         el("a", { href: isManager ? "portfolio-manager.html?manage=1" : "portfolio-manager.html", text:"Portfolio" }),
         el("a", { href:"scheduler.html", text:"Scheduler" })]);
+      const so = el("a", { href:"#", text:"Sign out" });
+      so.addEventListener("click", async e => { e.preventDefault(); try{ sessionStorage.removeItem("eiManage"); }catch(_){} await sb.auth.signOut(); location.reload(); });
       if(isManager){
         topSwitch = el("button", { class:"pe-switch", type:"button", role:"switch", "aria-checked":"false", "aria-label":"Manage mode (edit photos on the site)" }, [el("span", { text:"Manage" }), el("span", { class:"trk" })]);
         topSwitch.addEventListener("click", () => { if(switchHandler) switchHandler(topSwitch.getAttribute("aria-checked") !== "true"); });
         strip.appendChild(topSwitch);
       }
+      strip.appendChild(so);
       const nav = document.querySelector("header nav");
       if(nav){
         const actions = nav.querySelector(".nav-actions"), toggle = nav.querySelector(".navtoggle");
