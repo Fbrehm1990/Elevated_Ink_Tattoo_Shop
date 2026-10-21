@@ -183,6 +183,12 @@
   .master-view{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
   .master-view label{font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.02em; color:var(--gold);}
   .master-view select, .md-date{font:inherit; font-size:14px; font-weight:600; padding:9px 12px; background:var(--paper); color:var(--ink); border:2px solid var(--line); color-scheme:dark;}
+  .md-legend{display:flex; gap:8px 16px; flex-wrap:wrap; margin-bottom:12px; font-size:12.5px; color:var(--ink-soft);}
+  .md-legend span{display:inline-flex; align-items:center; gap:6px;}
+  .md-legend i{width:12px; height:12px; display:inline-block;}
+  .m-line{font-size:11px; font-weight:600; padding:2px 5px; border-left:3px solid; background:#f2efe6; color:#221c14; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .m-more{font-size:11px; font-weight:700; color:#7a6f5c;}
+  .md-day-title{font-family:'Alfa Slab One',serif; font-weight:400; font-size:24px; margin:30px 0 6px;}
   .md-summary{color:var(--ink-soft); font-size:14px; margin:0 0 18px;}
   .md-artist{border:2px solid var(--line); background:var(--paper); margin-bottom:14px;}
   .md-artist-head{display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; padding:12px 16px; border-bottom:1px solid var(--line);}
@@ -394,13 +400,15 @@
 
       <div id="masterPanel" style="display:none;">
         <div class="cal-header">
-          <button class="cal-nav-btn" id="mdPrev" type="button" aria-label="Previous day">&larr;</button>
+          <button class="cal-nav-btn" id="mdPrev" type="button" aria-label="Previous month">&larr;</button>
           <span class="cal-month-label" id="mdLabel"></span>
-          <button class="cal-nav-btn" id="mdNext" type="button" aria-label="Next day">&rarr;</button>
-          <input type="date" id="mdDate" class="md-date" aria-label="Pick a date">
+          <button class="cal-nav-btn" id="mdNext" type="button" aria-label="Next month">&rarr;</button>
           <button class="btn btn-ghost cal-today-btn" id="mdToday" type="button">Today</button>
           <button class="btn btn-ghost cal-today-btn" id="mdRefresh" type="button">Refresh</button>
         </div>
+        <div class="md-legend" id="mdLegend"></div>
+        <div class="cal-grid" id="mdGrid"></div>
+        <h3 class="md-day-title" id="mdDayTitle"></h3>
         <p class="md-summary" id="mdSummary"></p>
         <div id="mdList"></div>
       </div>
@@ -558,7 +566,8 @@ const ARTISTS = [
   { id:"makenzi", name:"Makenzi" },
   { id:"aaron",   name:"Aaron" },
   { id:"austin",  name:"Austin" },
-  { id:"doug",    name:"Doug" }
+  { id:"doug",    name:"Doug" },
+  { id:"freddy",  name:"Freddy (test)" }
 ];
 const STUDIO_OPEN_MIN = 11 * 60;   // 11:00 AM, in minutes since midnight
 const STUDIO_CLOSE_MIN = 19 * 60;  // 7:00 PM
@@ -703,6 +712,8 @@ async function loadStaffProfile(){
 
 /* ---------- master (TJ): all artists' calendars ---------- */
 let masterDate = null, masterTimer = null, masterTab = "cal";
+let mYear = new Date().getFullYear(), mMonth = new Date().getMonth(), masterBk = [], masterBl = [];
+const ARTIST_COLORS = { tj:"#c14a3a", ariana:"#7b4fa3", makenzi:"#d9822b", aaron:"#3f6fb5", austin:"#2f7d55", doug:"#2a8a8a", freddy:"#8a6d3b" };
 function artistName(id){ const a = ARTISTS.find(x => x.id === id); return a ? a.name : id; }
 function setupMasterUI(){
   document.getElementById("masterBar").style.display = isMaster ? "flex" : "none";
@@ -723,7 +734,10 @@ function showMasterTab(which){
   document.getElementById("mtabCal").setAttribute("aria-selected", String(!m));
   document.getElementById("mtabMaster").setAttribute("aria-selected", String(m));
   stopMasterRefresh();
-  if(m){ if(!masterDate) masterDate = fmtDate(new Date()); loadMasterDay(); masterTimer = setInterval(loadMasterDay, 60000); }
+  if(m){
+    if(!masterDate) masterDate = fmtDate(new Date());
+    loadMasterMonth(); masterTimer = setInterval(loadMasterMonth, 60000);
+  }
 }
 function stopMasterRefresh(){ if(masterTimer){ clearInterval(masterTimer); masterTimer = null; } }
 document.getElementById("mtabCal").addEventListener("click", () => showMasterTab("cal"));
@@ -732,37 +746,87 @@ document.getElementById("viewArtist").addEventListener("change", async e => {
   staffArtistId = e.target.value; selectedDate = null;
   await loadMonthData(); renderCalendarHeader(); renderCalendarGrid();
 });
-function shiftMasterDay(n){ const d = new Date(masterDate + "T00:00:00"); d.setDate(d.getDate() + n); masterDate = fmtDate(d); loadMasterDay(); }
-document.getElementById("mdPrev").addEventListener("click", () => shiftMasterDay(-1));
-document.getElementById("mdNext").addEventListener("click", () => shiftMasterDay(1));
-document.getElementById("mdToday").addEventListener("click", () => { masterDate = fmtDate(new Date()); loadMasterDay(); });
-document.getElementById("mdRefresh").addEventListener("click", loadMasterDay);
-document.getElementById("mdDate").addEventListener("change", e => { if(e.target.value){ masterDate = e.target.value; loadMasterDay(); } });
+function shiftMasterMonth(n){ const d = new Date(mYear, mMonth + n, 1); mYear = d.getFullYear(); mMonth = d.getMonth(); loadMasterMonth(); }
+document.getElementById("mdPrev").addEventListener("click", () => shiftMasterMonth(-1));
+document.getElementById("mdNext").addEventListener("click", () => shiftMasterMonth(1));
+document.getElementById("mdToday").addEventListener("click", () => { const n = new Date(); mYear = n.getFullYear(); mMonth = n.getMonth(); masterDate = fmtDate(n); loadMasterMonth(); });
+document.getElementById("mdRefresh").addEventListener("click", loadMasterMonth);
 
-async function loadMasterDay(){
-  if(!isMaster || !masterDate) return;
-  const day = masterDate;
+// One fetch per month for ALL artists; every artist's appointments land on the same calendar.
+async function loadMasterMonth(){
+  if(!isMaster) return;
+  const y = mYear, m = mMonth, { from, to } = monthRange(y, m);
   const [bk, bl] = await Promise.all([
-    supabaseClient.from("bookings").select("*").eq("appt_date", day),
-    supabaseClient.from("blocked_slots").select("*").eq("appt_date", day)
+    supabaseClient.from("bookings").select("*").gte("appt_date", from).lte("appt_date", to),
+    supabaseClient.from("blocked_slots").select("*").gte("appt_date", from).lte("appt_date", to)
   ]);
-  if(day !== masterDate) return; // the date changed while loading
-  const list = document.getElementById("mdList"); list.innerHTML = "";
-  document.getElementById("mdDate").value = day;
-  document.getElementById("mdLabel").textContent = new Date(day + "T00:00:00").toLocaleDateString(undefined, { weekday:"long", month:"long", day:"numeric", year:"numeric" });
+  if(y !== mYear || m !== mMonth) return; // month changed while loading
+  document.getElementById("mdLabel").textContent = MONTH_NAMES[m] + " " + y;
   if(bk.error){
     document.getElementById("mdSummary").textContent = "Couldn't load appointments (" + bk.error.message + "). Has supabase_roles.sql been run, and is your account set as master?";
     return;
   }
+  masterBk = bk.data || []; masterBl = bl.data || [];
+  renderMasterLegend(); renderMasterGrid(); renderMasterDay();
+}
+function renderMasterLegend(){
+  const lg = document.getElementById("mdLegend"); lg.innerHTML = "";
+  ARTISTS.forEach(a => {
+    if(a.id === "freddy" && !masterBk.some(r => r.artist_id === "freddy")) return;
+    const sp = document.createElement("span"), sw = document.createElement("i");
+    sw.style.background = ARTIST_COLORS[a.id] || "#888"; sp.append(sw, document.createTextNode(a.name)); lg.appendChild(sp);
+  });
+}
+function masterDayAppts(key){
+  const out = [];
+  ARTISTS.forEach(a => {
+    const bMap = {};
+    masterBk.filter(r => r.appt_date === key && r.artist_id === a.id).forEach(r => bMap[r.appt_time] = r);
+    groupDayItems(bMap, {}).forEach(g => out.push({ artist:a, g }));
+  });
+  return out.sort((x, y) => x.g.startMin - y.g.startMin);
+}
+function renderMasterGrid(){
+  const grid = document.getElementById("mdGrid"); grid.innerHTML = "";
+  DOW.forEach(d => { const h = document.createElement("div"); h.className = "cal-weekday"; h.textContent = d; grid.appendChild(h); });
+  const daysInMonth = new Date(mYear, mMonth + 1, 0).getDate();
+  for(let i = 0; i < new Date(mYear, mMonth, 1).getDay(); i++){ const c = document.createElement("div"); c.className = "cal-day pad"; grid.appendChild(c); }
+  const todayKey = fmtDate(new Date());
+  const MAXL = window.innerWidth < 480 ? 1 : (window.innerWidth < 700 ? 2 : 4);
+  for(let d = 1; d <= daysInMonth; d++){
+    const dateObj = new Date(mYear, mMonth, d), key = fmtDate(dateObj);
+    const cell = document.createElement("div");
+    cell.className = "cal-day" + (STUDIO_DAYS.includes(dateObj.getDay()) ? "" : " off-day") + (key === todayKey ? " today" : "") + (key === masterDate ? " selected" : "");
+    const num = document.createElement("span"); num.className = "cal-daynum"; num.textContent = d;
+    const ev = document.createElement("div"); ev.className = "cal-day-events";
+    const appts = masterDayAppts(key);
+    appts.slice(0, MAXL).forEach(x => {
+      const l = document.createElement("span"); l.className = "m-line"; l.style.borderLeftColor = ARTIST_COLORS[x.artist.id] || "#888";
+      l.textContent = x.g.startTime.replace(":00", "").replace(" AM", "a").replace(" PM", "p") + " " + x.artist.name;
+      l.title = x.artist.name + " " + x.g.startTime + "\u2013" + x.g.endTime + " \u2014 " + (x.g.name || "Appointment");
+      ev.appendChild(l);
+    });
+    if(appts.length > MAXL){ const mo = document.createElement("span"); mo.className = "m-more"; mo.textContent = "+" + (appts.length - MAXL) + " more"; ev.appendChild(mo); }
+    cell.append(num, ev);
+    cell.addEventListener("click", () => { masterDate = key; renderMasterGrid(); renderMasterDay(); document.getElementById("mdDayTitle").scrollIntoView({ behavior:"smooth", block:"start" }); });
+    grid.appendChild(cell);
+  }
+}
+// Detail for the selected day: every artist, side by side in one list.
+function renderMasterDay(){
+  const day = masterDate; const list = document.getElementById("mdList"); list.innerHTML = "";
+  if(!day){ document.getElementById("mdDayTitle").textContent = ""; document.getElementById("mdSummary").textContent = "Click a day to see everyone's appointments."; return; }
+  document.getElementById("mdDayTitle").textContent = new Date(day + "T00:00:00").toLocaleDateString(undefined, { weekday:"long", month:"long", day:"numeric", year:"numeric" });
   let total = 0;
   ARTISTS.forEach(a => {
     const bMap = {}, kMap = {};
-    (bk.data || []).filter(r => r.artist_id === a.id).forEach(r => bMap[r.appt_time] = r);
-    (bl.data || []).filter(r => r.artist_id === a.id).forEach(r => kMap[r.appt_time] = r);
+    masterBk.filter(r => r.appt_date === day && r.artist_id === a.id).forEach(r => bMap[r.appt_time] = r);
+    masterBl.filter(r => r.appt_date === day && r.artist_id === a.id).forEach(r => kMap[r.appt_time] = r);
     const groups = groupDayItems(bMap, kMap);
     const appts = groups.filter(g => g.type === "booking");
     total += appts.length;
-    const card = document.createElement("div"); card.className = "md-artist";
+    if(a.id === "freddy" && !groups.length) return;
+    const card = document.createElement("div"); card.className = "md-artist"; card.style.borderLeft = "4px solid " + (ARTIST_COLORS[a.id] || "#888");
     const head = document.createElement("div"); head.className = "md-artist-head";
     const h4 = document.createElement("h4"); h4.textContent = a.name;
     const small = document.createElement("small"); small.textContent = appts.length + (appts.length === 1 ? " appointment" : " appointments"); h4.appendChild(small);
@@ -777,18 +841,17 @@ async function loadMasterDay(){
     groups.forEach(g => {
       const row = document.createElement("div"); row.className = "md-row" + (g.type === "block" ? " blocked" : "");
       const t = document.createElement("div"); t.className = "md-time"; t.textContent = g.startTime + " \u2013 " + g.endTime;
-      const d = document.createElement("div"); d.className = "md-detail";
+      const dd = document.createElement("div"); dd.className = "md-detail";
       if(g.type === "booking"){
-        const first = (bMap[g.times[0]] || {});
-        d.textContent = g.name || "Appointment";
-        const extra = [first.phone, g.note].filter(Boolean).join(" \u00b7 ");
-        if(extra){ const sp = document.createElement("span"); sp.textContent = " \u2014 " + extra; d.appendChild(sp); }
-      } else { d.textContent = "Blocked"; }
-      row.append(t, d); card.appendChild(row);
+        dd.textContent = g.name || "Appointment";
+        const extra = [(bMap[g.times[0]] || {}).phone, g.note].filter(Boolean).join(" \u00b7 ");
+        if(extra){ const sp = document.createElement("span"); sp.textContent = " \u2014 " + extra; dd.appendChild(sp); }
+      } else { dd.textContent = "Blocked"; }
+      row.append(t, dd); card.appendChild(row);
     });
     list.appendChild(card);
   });
-  document.getElementById("mdSummary").textContent = total + (total === 1 ? " appointment" : " appointments") + " across the shop on this day. Updates automatically every minute.";
+  document.getElementById("mdSummary").textContent = total + (total === 1 ? " appointment" : " appointments") + " across the shop on this day. The calendar updates automatically every minute.";
 }
 
 function monthRange(year, month){
