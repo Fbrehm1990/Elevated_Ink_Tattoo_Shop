@@ -272,7 +272,7 @@
 
     const file = el("input", { type:"file", accept:"image/jpeg,image/png,image/webp", multiple:"multiple", style:"display:none;" });
     const pick = el("select", { class:"pe-select", "aria-label":"Which artist to add the photo to" });
-    Object.keys(NAMES).filter(canEditArtist).forEach(id => pick.appendChild(el("option", { value:id, text:"For " + NAMES[id] })));
+    ["tj","ariana","freddy"].filter(canEditArtist).forEach(id => pick.appendChild(el("option", { value:id, text:"For " + NAMES[id] })));
     if(ownId && canEditArtist(ownId)) pick.value = ownId;
     if(!IS_GALLERY) pick.style.display = "none";
     const bAdd = el("button", { class:"pe-btn big", type:"button", text:"➕ Add photo" });
