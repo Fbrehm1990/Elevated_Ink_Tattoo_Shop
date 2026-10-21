@@ -289,7 +289,8 @@ function makeCard(p){
     card.classList.add("zoomable");
     card.innerHTML = `<img src="${p.file}" alt="Tattoo by ${ARTIST_NAME}" loading="lazy"><div class="tag"><span></span></div>`;
     card.querySelector(".tag span").textContent = p.caption || ARTIST_NAME;
-    card.addEventListener("click", () => openLightbox(current.indexOf(p)));
+    card.addEventListener("click", () => { if(window.EIEdit && window.EIEdit.on) window.EIEdit.edit(p); else openLightbox(current.indexOf(p)); });
+    if(window.EIEdit && window.EIEdit.on) card.classList.add("editable");
     card.querySelector("img").addEventListener("error", () => card.remove());
   } else {
     card.innerHTML = p.svg + `<div class="tag"><span>${p.title}</span></div>`;
@@ -384,5 +385,6 @@ document.addEventListener("keydown", e => {
 });
 </script>
 
+<script src="page-edit.js"></script>
 </body>
 </html>

@@ -73,11 +73,23 @@
     [["scheduler.html","Scheduler","scheduler"],["portfolio-manager.html","My Portfolio","portfolio"]].forEach(([h,t,k]) => {
       const x = el("a", { href:h, class:"ea-tab", text:t }); if(current === k) x.classList.add("current"); bar.appendChild(x);
     });
+    const manage = el("a", { href:"portfolio-manager.html?manage=1", class:"ea-tab", text:"Manage Portfolios" });
+    manage.style.display = "none"; if(current === "manage") manage.classList.add("current"); bar.appendChild(manage);
+    const mItem = item("portfolio-manager.html?manage=1", "Manage Portfolios", "Edit any artist's photos and bio", "manage");
+    mItem.style.display = "none"; list.insertBefore(mItem, list.children[2]);
+    // TJ (master) and Ariana (social media manager) also get the Manage Portfolios button.
+    async function refreshRole(session){
+      let ok = false;
+      if(session){
+        try{ const { data } = await sb.from("staff_roles").select("role").maybeSingle(); ok = !!(data && (data.role === "master" || data.role === "social")); }catch(e){}
+      }
+      manage.style.display = ok ? "" : "none"; mItem.style.display = ok ? "block" : "none";
+    }
     const nav = document.querySelector("header nav");
     if(nav) nav.appendChild(bar); else document.body.prepend(bar);
     const show = s => { container.classList.toggle("show", !!s); bar.classList.toggle("show", !!s); };
-    sb.auth.getSession().then(({ data }) => show(data.session));
-    sb.auth.onAuthStateChange((_evt, session) => show(session));
+    sb.auth.getSession().then(({ data }) => { show(data.session); refreshRole(data.session); });
+    sb.auth.onAuthStateChange((_evt, session) => { show(session); refreshRole(session); });
   }
 
   window.ArtistAuth = {
