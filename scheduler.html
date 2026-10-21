@@ -657,7 +657,7 @@ document.getElementById("staffLoginBtn").addEventListener("click", async () => {
   btn.disabled = false; btn.textContent = "Sign In";
 
   if(error){ msg.textContent = "Sign-in failed: " + error.message; return; }
-  await loadStaffProfile();
+  location.href = "staff.html";
 });
 
 document.getElementById("staffLogoutBtn").addEventListener("click", async () => {

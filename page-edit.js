@@ -193,6 +193,7 @@
     const prev = el("img", { alt:"" });
     const cap = el("input", { type:"text", maxlength:"80", id:"peCap", placeholder:"For example: Traditional rose, forearm" });
     const feat = el("input", { type:"checkbox", id:"peFeat" });
+    let featLabel;
     const msg = el("div", { class:"pe-msg", role:"status" });
     const bSave = el("button", { class:"pe-btn big", type:"button", text:"Save" });
     const bCancel = el("button", { class:"pe-btn ghost", type:"button", text:"Cancel" });
@@ -200,7 +201,7 @@
     const ov = el("div", { class:"pe-overlay", role:"dialog", "aria-modal":"true" }, [el("div", { class:"pe-box" }, [
       title, sub, prev,
       el("label", { class:"lbl", for:"peCap", text:"Caption (optional)" }), cap,
-      el("label", { class:"pe-check" }, [feat, document.createTextNode("⭐ Favorite — show this photo first")]),
+      featLabel = el("label", { class:"pe-check" }, [feat, document.createTextNode("⭐ Favorite — show this photo first")]),
       msg, el("div", { class:"pe-actions" }, [bDel, el("div", { class:"grp" }, [bCancel, bSave])])
     ])]);
     document.body.appendChild(ov);
@@ -212,15 +213,18 @@
 
     API.edit = async p => {
       cur = Object.assign({ artist: PAGE_ARTIST }, p); confirmDel = false; bDel.textContent = "Delete photo"; say(msg, "");
-      prev.src = cur.file; cap.value = cur.caption || ""; feat.checked = !!cur.featured;
+      prev.src = cur.file; cap.value = cur.caption || ""; feat.checked = false;
       title.textContent = IS_GALLERY ? "Edit this photo (" + (NAMES[cur.artist] || cur.artist) + ")" : "Edit this photo";
+      featLabel.style.display = IS_GALLERY ? "none" : "";
       ov.classList.add("open"); setTimeout(() => cap.focus(), 50);
-      if(p.caption === undefined){ // opened from the homepage gallery: look up what is saved
-        const want = cur;
-        const { data: row } = await sb.from("portfolio_photos").select("caption,featured").eq("artist_id", want.artist).eq("src", want.file).maybeSingle();
-        let featured = row ? row.featured : false;
-        if(!row){ const j = await starterJson(); const sp = (j[want.artist] || []).find(x => x.file === want.file); featured = !!(sp && sp.featured); }
-        if(cur === want){ want.caption = row ? row.caption : ""; want.featured = featured; cap.value = want.caption; feat.checked = featured; }
+      // look up what is saved: Favorite starts unchecked unless it was chosen before
+      const want = cur;
+      const { data: row } = await sb.from("portfolio_photos").select("caption,featured").eq("artist_id", want.artist).eq("src", want.file).maybeSingle();
+      let flag = row ? !!row.featured : false;
+      if(!row && IS_GALLERY){ const j = await starterJson(); const sp = (j[want.artist] || []).find(x => x.file === want.file); flag = !!(sp && sp.featured); }
+      if(cur === want){
+        want.featured = flag; feat.checked = IS_GALLERY ? false : flag;
+        if(p.caption === undefined){ want.caption = row ? row.caption : ""; cap.value = want.caption; }
       }
     };
 
@@ -228,7 +232,7 @@
       if(!cur) return;
       bSave.disabled = true; say(msg, "Saving…");
       const { error } = await sb.from("portfolio_photos").upsert(
-        { artist_id: cur.artist, src: cur.file, caption: cap.value.trim(), featured: feat.checked, hidden: false },
+        { artist_id: cur.artist, src: cur.file, caption: cap.value.trim(), featured: IS_GALLERY ? !!cur.featured : feat.checked, hidden: false },
         { onConflict: "artist_id,src" });
       bSave.disabled = false;
       if(error){ say(msg, "Sorry, that didn't save (" + error.message + ")."); return; }
