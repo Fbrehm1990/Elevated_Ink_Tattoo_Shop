@@ -196,3 +196,10 @@ The top-bar "Manage Portfolios" button was removed. TJ and Ariana now click any 
 page or in the homepage gallery, to get the edit pop-out; the gallery bar has an artist picker for "+ Add photos".
 The Manage Portfolios page still exists for bio/profile text (reach it with the "Edit bio & profile" button
 on an artist page). The spotlight/team photos are fixed site images and are not editable this way.
+
+## Simple editing for non-technical staff (page-edit.js)
+
+Every page footer has a small "Staff sign-in" link. TJ/Ariana/artists sign in there (no scheduler needed). They then get a
+big bottom bar ("Add a photo", with an artist picker on the homepage) and every photo shows an Edit tag. Tapping a photo opens
+a plain-language window: caption, "Favorite - show this photo first", Save, Delete. Adding a single photo opens its window
+right away to add a caption. "Stop editing" previews as a visitor; "Sign out" ends the session.
