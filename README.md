@@ -185,9 +185,14 @@ uncomment and run the two lines at the bottom with TJ's and Ariana's sign-in ema
 - Homepage gallery: newest uploads (any artist) appear first, then each artist's featured photos.
 - FAQ section rewritten, followed by the plain note "We do not sell tattoo supplies."
 
-## Edit photos right on the artist page
+## Edit photos right on the page (artist pages and the homepage gallery)
 
 `page-edit.js` (loaded by every artist page) does nothing for visitors. When TJ, Ariana (or the artist who
 owns that page) is signed in on the same browser, photos show an **Edit** badge: click one to open a pop-out
 to change its caption, feature it, or remove it. A bar at the bottom has **+ Add photos**, **Edit bio & profile**,
 and an **Edit mode** toggle to preview the page as a visitor. Permissions are enforced by the database.
+
+The top-bar "Manage Portfolios" button was removed. TJ and Ariana now click any portfolio photo, on any artist
+page or in the homepage gallery, to get the edit pop-out; the gallery bar has an artist picker for "+ Add photos".
+The Manage Portfolios page still exists for bio/profile text (reach it with the "Edit bio & profile" button
+on an artist page). The spotlight/team photos are fixed site images and are not editable this way.

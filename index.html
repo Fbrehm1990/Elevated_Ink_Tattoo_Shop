@@ -606,6 +606,10 @@ function renderGallery(filter){
     card.setAttribute("aria-label", "Tattoo by " + ARTIST_NAMES[g.artist] + " - view portfolio");
     card.innerHTML = (g.img ? `<img src="${g.img}" alt="Tattoo by ${ARTIST_NAMES[g.artist]}" loading="lazy">` : g.svg) + `<div class="tag"><span>${ARTIST_NAMES[g.artist]}</span><b>View portfolio &rarr;</b></div>`;
     const im = card.querySelector("img"); if(im) im.addEventListener("error", () => card.remove());
+    if(g.img && window.EIEdit && window.EIEdit.on && window.EIEdit.canEdit(g.artist)){
+      card.classList.add("editable");
+      card.addEventListener("click", e => { e.preventDefault(); window.EIEdit.edit({ file:g.img, artist:g.artist }); });
+    }
     grid.appendChild(card);
   });
 }
@@ -620,7 +624,7 @@ let activeFilter = "all";
 renderGallery("all");
 const SB_URL = "https://bvsgrgdardumiabfewwr.supabase.co";
 const SB_KEY = "sb_publishable__Qic8J69dJyd76lnVw2m-A_OaF0R9nO";
-(async function loadFeatured(){
+async function loadFeatured(){
   let base = {}, rows = [];
   try{ const r = await fetch("portfolio.json"); if(r.ok) base = await r.json(); }catch(e){}
   try{
@@ -646,7 +650,8 @@ const SB_KEY = "sb_publishable__Qic8J69dJyd76lnVw2m-A_OaF0R9nO";
     GALLERY = hasDoug ? feat : [...feat, DOUG_CARD];
     renderGallery(activeFilter);
   }
-})();
+}
+loadFeatured();
 
 </script>
 
@@ -697,5 +702,6 @@ const SB_KEY = "sb_publishable__Qic8J69dJyd76lnVw2m-A_OaF0R9nO";
 })();
 </script>
 
+<script src="page-edit.js"></script>
 </body>
 </html>

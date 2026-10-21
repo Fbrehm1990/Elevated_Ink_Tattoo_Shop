@@ -14,7 +14,11 @@
   const STORE_KEY = "sb-bvsgrgdardumiabfewwr-auth-token";
   const BUCKET = "portfolio";
   try{ if(!localStorage.getItem(STORE_KEY)) return; }catch(e){ return; }
-  if(typeof ARTIST === "undefined" || typeof loadPortfolio !== "function") return;
+  const PAGE_ARTIST = (typeof ARTIST !== "undefined") ? ARTIST : null;          // artist pages
+  const IS_GALLERY = !PAGE_ARTIST && !!document.getElementById("galleryGrid");  // homepage gallery
+  if(PAGE_ARTIST && typeof loadPortfolio !== "function") return;
+  if(!PAGE_ARTIST && !IS_GALLERY) return;
+  const NAMES = { tj:"TJ", ariana:"Ariana", makenzi:"Makenzi", aaron:"Aaron", austin:"Austin", doug:"Doug", freddy:"Freddy (test)" };
 
   const s = document.createElement("script");
   s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
@@ -31,15 +35,17 @@
     ]);
     const role = roleRes.data && roleRes.data.role;
     const isManager = role === "master" || role === "social";
-    const isOwner = !!(profRes.data && profRes.data.artist_id === ARTIST);
-    console.log("[page-edit] role:", role || "none", "| linked artist:", (profRes.data && profRes.data.artist_id) || "none", "| this page:", ARTIST,
+    const ownId = profRes.data && profRes.data.artist_id;
+    const isOwner = PAGE_ARTIST ? ownId === PAGE_ARTIST : !!ownId;
+    const canEditArtist = a => isManager || ownId === a;
+    console.log("[page-edit] role:", role || "none", "| linked artist:", (profRes.data && profRes.data.artist_id) || "none", "| this page:", PAGE_ARTIST || "homepage gallery",
       roleRes.error ? "| role lookup error: " + roleRes.error.message : "");
     if(!isManager && !isOwner){
       // Only explain when asked (?editdebug=1) or when the roles setup looks incomplete.
       if(/[?&]editdebug\b/.test(location.search) || roleRes.error){
         const n = document.createElement("div");
         n.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:150;background:#221c14;border:2px solid #c14a3a;color:#ece0c3;padding:12px 16px;font:13px/1.5 'Libre Franklin',sans-serif;max-width:640px;margin:0 auto;";
-        n.textContent = "Signed in, but this account can't edit this page. Role: " + (role || "none") + ". Linked artist: " + ((profRes.data && profRes.data.artist_id) || "none") + ". This page: " + ARTIST + "." +
+        n.textContent = "Signed in, but this account can't edit this page. Role: " + (role || "none") + ". Linked artist: " + ((profRes.data && profRes.data.artist_id) || "none") + ". This page: " + (PAGE_ARTIST || "homepage gallery") + "." +
           (roleRes.error ? " Role lookup failed (" + roleRes.error.message + ") - supabase_roles.sql may not have been run." : " Ask the shop owner to check your role in Supabase.");
         document.body.appendChild(n);
       }
@@ -79,15 +85,19 @@
     document.head.appendChild(st);
 
     /* ---------- helpers ---------- */
-    const API = window.EIEdit = { on:true };
-    let starterSet = null;
-    async function starters(){
-      if(starterSet) return starterSet;
-      starterSet = new Set();
-      try{ const r = await fetch("portfolio.json"); if(r.ok){ const j = await r.json(); (j[ARTIST] || []).forEach(p => starterSet.add(p.file)); } }catch(e){}
-      return starterSet;
+    const API = window.EIEdit = { on:true, canEdit: canEditArtist };
+    let starterData = null;
+    async function starterJson(){
+      if(starterData) return starterData;
+      starterData = {};
+      try{ const r = await fetch("portfolio.json"); if(r.ok) starterData = await r.json(); }catch(e){}
+      return starterData;
     }
-    function refresh(){ return loadPortfolio().then(items => renderPortfolio(items.length ? items : FALLBACK)).catch(() => renderPortfolio(FALLBACK)); }
+    async function starters(artist){ const j = await starterJson(); return new Set((j[artist] || []).map(p => p.file)); }
+    function refresh(){
+      if(IS_GALLERY) return loadFeatured();
+      return loadPortfolio().then(items => renderPortfolio(items.length ? items : FALLBACK)).catch(() => renderPortfolio(FALLBACK));
+    }
     API.refresh = refresh;
     const el = (tag, attrs, kids) => { const e = document.createElement(tag); Object.entries(attrs || {}).forEach(([k, v]) => k === "text" ? e.textContent = v : e.setAttribute(k, v)); (kids || []).forEach(c => e.appendChild(c)); return e; };
     function say(node, t, ok){ node.textContent = t || ""; node.classList.toggle("ok", !!ok); }
@@ -106,6 +116,7 @@
 
     /* ---------- edit pop-out ---------- */
     const ov = el("div", { class:"pe-overlay", role:"dialog", "aria-modal":"true" });
+    const title = el("h3", { text:"Edit photo" });
     const prev = el("img", { alt:"" });
     const cap = el("input", { type:"text", maxlength:"80", placeholder:"Leave blank to show just the artist's name", id:"peCap" });
     const feat = el("input", { type:"checkbox", id:"peFeat" });
@@ -114,7 +125,7 @@
     const bCancel = el("button", { class:"pe-btn ghost", type:"button", text:"Cancel" });
     const bDel = el("button", { class:"pe-btn danger", type:"button", text:"Remove photo" });
     ov.appendChild(el("div", { class:"pe-box" }, [
-      el("h3", { text:"Edit photo" }), prev,
+      title, prev,
       el("label", { class:"lbl", for:"peCap", text:"Caption (optional)" }), cap,
       el("label", { class:"pe-check" }, [feat, document.createTextNode("Feature this photo (shows in the Featured section and the homepage gallery)")]),
       msg,
@@ -127,17 +138,25 @@
     document.addEventListener("keydown", e => { if(e.key === "Escape") close(); });
     bCancel.addEventListener("click", close);
 
-    API.edit = p => {
-      cur = p; confirmDel = false; bDel.textContent = "Remove photo"; say(msg, "");
-      prev.src = p.file; cap.value = p.caption || ""; feat.checked = !!p.featured;
+    API.edit = async p => {
+      cur = Object.assign({ artist: PAGE_ARTIST }, p); confirmDel = false; bDel.textContent = "Remove photo"; say(msg, "");
+      prev.src = cur.file; cap.value = cur.caption || ""; feat.checked = !!cur.featured;
+      title.textContent = "Edit photo" + (IS_GALLERY ? " \u2014 " + (NAMES[cur.artist] || cur.artist) : "");
       ov.classList.add("open"); setTimeout(() => cap.focus(), 50);
+      if(p.caption === undefined){ // opened from the gallery: look up the saved caption / featured state
+        const want = cur;
+        const { data: row } = await sb.from("portfolio_photos").select("caption,featured").eq("artist_id", want.artist).eq("src", want.file).maybeSingle();
+        let featured = row ? row.featured : false;
+        if(!row){ const j = await starterJson(); const sp = (j[want.artist] || []).find(x => x.file === want.file); featured = !!(sp && sp.featured); }
+        if(cur === want){ want.caption = row ? row.caption : ""; want.featured = featured; cap.value = want.caption; feat.checked = featured; }
+      }
     };
 
     bSave.addEventListener("click", async () => {
       if(!cur) return;
       bSave.disabled = true; say(msg, "Saving…");
       const { error } = await sb.from("portfolio_photos").upsert(
-        { artist_id: ARTIST, src: cur.file, caption: cap.value.trim(), featured: feat.checked, hidden: false },
+        { artist_id: cur.artist, src: cur.file, caption: cap.value.trim(), featured: feat.checked, hidden: false },
         { onConflict: "artist_id,src" });
       bSave.disabled = false;
       if(error){ say(msg, "Couldn't save: " + error.message); return; }
@@ -146,7 +165,7 @@
 
     bDel.addEventListener("click", async () => {
       if(!cur) return;
-      const isStarter = (await starters()).has(cur.file);
+      const isStarter = (await starters(cur.artist)).has(cur.file);
       if(!confirmDel){
         confirmDel = true; bDel.textContent = "Tap again to confirm";
         say(msg, isStarter ? "This hides the photo from the page. It can be restored later from Manage Portfolios." : "This permanently deletes the uploaded photo.");
@@ -156,12 +175,12 @@
       let error = null;
       if(isStarter){
         ({ error } = await sb.from("portfolio_photos").upsert(
-          { artist_id: ARTIST, src: cur.file, caption: cur.caption || "", featured: !!cur.featured, hidden: true },
+          { artist_id: cur.artist, src: cur.file, caption: cur.caption || "", featured: !!cur.featured, hidden: true },
           { onConflict: "artist_id,src" }));
       } else {
-        const { data: row } = await sb.from("portfolio_photos").select("id,storage_path").eq("artist_id", ARTIST).eq("src", cur.file).maybeSingle();
+        const { data: row } = await sb.from("portfolio_photos").select("id,storage_path").eq("artist_id", cur.artist).eq("src", cur.file).maybeSingle();
         if(row && row.storage_path) await sb.storage.from(BUCKET).remove([row.storage_path]);
-        ({ error } = await sb.from("portfolio_photos").delete().eq("artist_id", ARTIST).eq("src", cur.file));
+        ({ error } = await sb.from("portfolio_photos").delete().eq("artist_id", cur.artist).eq("src", cur.file));
       }
       bDel.disabled = false;
       if(error){ say(msg, "Couldn't remove: " + error.message); return; }
@@ -172,9 +191,16 @@
     const file = el("input", { type:"file", accept:"image/jpeg,image/png,image/webp", multiple:"multiple", style:"display:none;" });
     const bAdd = el("button", { class:"pe-btn", type:"button", text:"+ Add photos" });
     const bText = el("a", { class:"pe-btn ghost", href: isManager ? "portfolio-manager.html?manage=1" : "portfolio-manager.html", text:"Edit bio & profile" });
+    if(IS_GALLERY) bText.style.display = "none";
+    const pick = el("select", { "aria-label":"Add photos to which artist", style:"font:inherit;font-size:13px;font-weight:600;padding:8px 10px;background:#17130e;color:#ece0c3;border:2px solid #443a2c;" });
+    Object.keys(NAMES).filter(canEditArtist).forEach(id => { const o = el("option", { value:id, text:NAMES[id] }); pick.appendChild(o); });
+    if(ownId && canEditArtist(ownId)) pick.value = ownId;
+    if(!IS_GALLERY) pick.style.display = "none";
+    const targetArtist = () => PAGE_ARTIST || pick.value;
     const bMode = el("button", { class:"pe-btn ghost", type:"button", text:"Edit mode: On" });
-    const status = el("span", { text:"Editing " + (typeof ARTIST_NAME !== "undefined" ? ARTIST_NAME : ARTIST) + "'s page" });
-    const bar = el("div", { class:"pe-bar" }, [status, bAdd, bText, bMode, file]);
+    const baseStatus = IS_GALLERY ? "Editing the gallery \u2014 click any photo" : "Editing " + (typeof ARTIST_NAME !== "undefined" ? ARTIST_NAME : PAGE_ARTIST) + "'s page";
+    const status = el("span", { text:baseStatus });
+    const bar = el("div", { class:"pe-bar" }, [status, pick, bAdd, bText, bMode, file]);
     document.body.appendChild(bar);
     bAdd.addEventListener("click", () => file.click());
     file.addEventListener("change", async () => {
@@ -184,11 +210,11 @@
         status.textContent = "Uploading " + (i + 1) + " of " + files.length + "…";
         try{
           const blob = await toJpeg(files[i], 1600);
-          const path = ARTIST + "/" + Date.now() + "-" + Math.random().toString(36).slice(2, 8) + ".jpg";
+          const tgt = targetArtist(); const path = tgt + "/" + Date.now() + "-" + Math.random().toString(36).slice(2, 8) + ".jpg";
           const up = await sb.storage.from(BUCKET).upload(path, blob, { contentType:"image/jpeg", cacheControl:"31536000" });
           if(up.error) throw up.error;
           const pub = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
-          const ins = await sb.from("portfolio_photos").insert({ artist_id: ARTIST, src: pub, storage_path: path });
+          const ins = await sb.from("portfolio_photos").insert({ artist_id: tgt, src: pub, storage_path: path });
           if(ins.error){ await sb.storage.from(BUCKET).remove([path]); throw ins.error; }
           ok++;
         }catch(err){ fail++; lastErr = err.message || String(err); }
@@ -196,11 +222,11 @@
       bAdd.disabled = false;
       status.textContent = ok + " photo" + (ok === 1 ? "" : "s") + " added" + (fail ? ", " + fail + " failed (" + lastErr + ")" : "");
       await refresh();
-      setTimeout(() => { status.textContent = "Editing " + (typeof ARTIST_NAME !== "undefined" ? ARTIST_NAME : ARTIST) + "'s page"; }, 5000);
+      setTimeout(() => { status.textContent = baseStatus; }, 5000);
     });
     bMode.addEventListener("click", async () => {
       API.on = !API.on; bMode.textContent = "Edit mode: " + (API.on ? "On" : "Off");
-      status.textContent = API.on ? "Editing " + (typeof ARTIST_NAME !== "undefined" ? ARTIST_NAME : ARTIST) + "'s page" : "Viewing as a visitor";
+      status.textContent = API.on ? baseStatus : "Viewing as a visitor";
       await refresh();
     });
 

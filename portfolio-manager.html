@@ -289,7 +289,7 @@ async function start(){
   const isManager = !!(roleRow && (roleRow.role === "master" || roleRow.role === "social"));
   if(isManager) $("pageSub").textContent = MANAGE_MODE
     ? "You have manager access to all artist profiles. Choose an artist below to add, edit or remove their photos and profile text."
-    : "You have manager access to all artist profiles. Use Manage Portfolios in the top bar to edit anyone's page.";
+    : "You have manager access to all artist profiles. Click any photo on any artist page or in the homepage gallery to edit it.";
   if(MANAGE_MODE && isManager){
     const sel = $("asSelect"); sel.innerHTML = "";
     Object.entries(ARTISTS).forEach(([id, name]) => { const o = document.createElement("option"); o.value = id; o.textContent = name + (id === ownArtistId ? " (me)" : ""); sel.appendChild(o); });
