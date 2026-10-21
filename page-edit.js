@@ -32,7 +32,19 @@
     const role = roleRes.data && roleRes.data.role;
     const isManager = role === "master" || role === "social";
     const isOwner = !!(profRes.data && profRes.data.artist_id === ARTIST);
-    if(!isManager && !isOwner) return;
+    console.log("[page-edit] role:", role || "none", "| linked artist:", (profRes.data && profRes.data.artist_id) || "none", "| this page:", ARTIST,
+      roleRes.error ? "| role lookup error: " + roleRes.error.message : "");
+    if(!isManager && !isOwner){
+      // Only explain when asked (?editdebug=1) or when the roles setup looks incomplete.
+      if(/[?&]editdebug\b/.test(location.search) || roleRes.error){
+        const n = document.createElement("div");
+        n.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:150;background:#221c14;border:2px solid #c14a3a;color:#ece0c3;padding:12px 16px;font:13px/1.5 'Libre Franklin',sans-serif;max-width:640px;margin:0 auto;";
+        n.textContent = "Signed in, but this account can't edit this page. Role: " + (role || "none") + ". Linked artist: " + ((profRes.data && profRes.data.artist_id) || "none") + ". This page: " + ARTIST + "." +
+          (roleRes.error ? " Role lookup failed (" + roleRes.error.message + ") - supabase_roles.sql may not have been run." : " Ask the shop owner to check your role in Supabase.");
+        document.body.appendChild(n);
+      }
+      return;
+    }
 
     /* ---------- styles ---------- */
     const st = document.createElement("style");
