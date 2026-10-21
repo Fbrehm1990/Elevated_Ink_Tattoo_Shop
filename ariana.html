@@ -78,6 +78,7 @@
   .sec-head p{color:var(--ink-soft); font-size:15px; margin:0;}
 
   .specialties{list-style:none; margin:0 0 26px; padding:0; display:flex; gap:10px; flex-wrap:wrap;}
+  section[hidden]{display:none;}
   .specialties[hidden]{display:none;}
   .specialties li{font-size:12.5px; font-weight:600; color:var(--ink); border:2px solid var(--line); padding:5px 12px;}
   .bio-layout{display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:56px; align-items:start;}
@@ -206,6 +207,16 @@
   </div>
 </section>
 
+<section id="featured" hidden>
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Featured</h2>
+      <p>Favorite pieces by Ariana. Tap any photo to enlarge it.</p>
+    </div>
+    <div class="gallery-grid" id="featuredGrid"></div>
+  </div>
+</section>
+
 <section id="portfolio">
   <div class="wrap">
     <div class="sec-head">
@@ -271,24 +282,31 @@ const ARTIST_NAME = "Ariana";
 const FALLBACK = [{ file:"images/portfolio/ariana-001.jpg", caption:"", featured:true }, { file:"images/portfolio/ariana-021.jpg", caption:"", featured:true }, { file:"images/portfolio/ariana-022.jpg", caption:"", featured:true }];
 const grid = document.getElementById("portfolioGrid");
 let current = [];
+function makeCard(p){
+  const card = document.createElement("div");
+  card.className = "gcard";
+  if(p.file){
+    card.classList.add("zoomable");
+    card.innerHTML = `<img src="${p.file}" alt="Tattoo by ${ARTIST_NAME}" loading="lazy"><div class="tag"><span></span></div>`;
+    card.querySelector(".tag span").textContent = p.caption || ARTIST_NAME;
+    card.addEventListener("click", () => openLightbox(current.indexOf(p)));
+    card.querySelector("img").addEventListener("error", () => card.remove());
+  } else {
+    card.innerHTML = p.svg + `<div class="tag"><span>${p.title}</span></div>`;
+  }
+  return card;
+}
 function renderPortfolio(items){
-  current = items.filter(p => p.file);
+  const feat = items.filter(p => p.file && p.featured);
+  const rest = items.filter(p => !(p.file && p.featured));
+  current = [...feat, ...rest].filter(p => p.file);
+  const fGrid = document.getElementById("featuredGrid");
+  fGrid.innerHTML = ""; feat.forEach(p => fGrid.appendChild(makeCard(p)));
+  document.getElementById("featured").hidden = !feat.length;
   grid.innerHTML = "";
-  if(!items.length){ grid.innerHTML = '<p class="empty-note">Photos coming soon. See the latest work on Instagram.</p>'; return; }
-  items.forEach(p => {
-    const card = document.createElement("div");
-    card.className = "gcard";
-    if(p.file){
-      card.classList.add("zoomable");
-      card.innerHTML = `<img src="${p.file}" alt="Tattoo by ${ARTIST_NAME}" loading="lazy"><div class="tag"><span></span></div>`;
-      card.querySelector(".tag span").textContent = p.caption || ARTIST_NAME;
-      card.addEventListener("click", () => openLightbox(current.indexOf(p)));
-      card.querySelector("img").addEventListener("error", () => card.remove());
-    } else {
-      card.innerHTML = p.svg + `<div class="tag"><span>${p.title}</span></div>`;
-    }
-    grid.appendChild(card);
-  });
+  rest.forEach(p => grid.appendChild(makeCard(p)));
+  if(!items.length){ grid.innerHTML = '<p class="empty-note">Photos coming soon. See the latest work on Instagram.</p>'; }
+  document.getElementById("portfolio").hidden = !!feat.length && !rest.length;
 }
 const SB_URL = "https://bvsgrgdardumiabfewwr.supabase.co";
 const SB_KEY = "sb_publishable__Qic8J69dJyd76lnVw2m-A_OaF0R9nO";
