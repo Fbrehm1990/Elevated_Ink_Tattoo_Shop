@@ -546,7 +546,7 @@
       }
       async function removeArtist(){
         if(!editing) return;
-        if(!delSure){ delSure = true; fDel.textContent = "Yes, remove"; fMsg.textContent = "This takes the artist off the website (you can restore them later). Their photos are kept."; return; }
+        if(!delSure){ delSure = true; fDel.textContent = "Yes, remove"; fMsg.textContent = "This takes the artist off the website and PERMANENTLY deletes their booking calendar and all of their appointments. Their photos are kept. Press Yes again to confirm."; return; }
         fDel.disabled = true;
         const res = editing.isStatic
           ? await sb.from("site_artists").upsert({ slug:editing.slug, name:NAMES[editing.slug] || editing.slug, hidden:true, position:0 }, { onConflict:"slug" })

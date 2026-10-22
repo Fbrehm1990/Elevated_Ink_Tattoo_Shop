@@ -211,3 +211,5 @@ Slideshow editing: run supabase_slides.sql once, then managers see "Edit slidesh
 Adding artists: run supabase_artists.sql once. In Manage mode, TJ/Ariana/Freddy see a "+" card in Meet the Artists and a "+ Add artist" button by the gallery tabs. New artists get a page at artist.html?a=<name>.
 
 Removing/editing original artists: re-run supabase_artists.sql (adds a "hidden" column). In Manage mode every artist card has Edit; Makenzi, Aaron, Austin and Doug can be removed and restored.
+
+Calendars: every artist added with "+" automatically appears in the master scheduler (view dropdown, month calendar, colors). Removing an artist deletes their calendar via the trigger in supabase_artists.sql (re-run it). To let a new artist sign in: create their login in Supabase Auth, then run: insert into artist_profiles(user_id, artist_id) select id, 'their-slug' from auth.users where email = 'their@email';

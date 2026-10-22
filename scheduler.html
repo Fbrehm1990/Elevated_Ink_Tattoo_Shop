@@ -691,6 +691,7 @@ async function loadStaffProfile(){
   }
 
   staffArtistId = ownArtistId = profile.artist_id;
+  await loadSiteArtists();
   const artist = ARTISTS.find(a => a.id === staffArtistId);
   document.getElementById("staffArtistName").textContent = artist ? artist.name : staffArtistId;
   // TJ (master) sees every artist's calendar and the master day view.
@@ -713,6 +714,19 @@ async function loadStaffProfile(){
 /* ---------- master (TJ): all artists' calendars ---------- */
 let masterDate = null, masterTimer = null, masterTab = "cal";
 let mYear = new Date().getFullYear(), mMonth = new Date().getMonth(), masterBk = [], masterBl = [];
+const EXTRA_COLORS = ["#b5527a", "#5d8a2e", "#a0522d", "#4682b4", "#8b7bd8", "#c9a227", "#2e8b8b", "#d2691e"];
+function colorFor(id){ if(ARTIST_COLORS[id]) return ARTIST_COLORS[id]; const i = ARTISTS.findIndex(a => a.id === id); return EXTRA_COLORS[Math.max(i, 0) % EXTRA_COLORS.length]; }
+// Artists added with the "+" button get a calendar automatically; removed artists lose theirs.
+async function loadSiteArtists(){
+  try{
+    const { data } = await supabaseClient.from("site_artists").select("slug,name,hidden,position").order("position", { ascending:true });
+    (data || []).forEach(r => {
+      const i = ARTISTS.findIndex(a => a.id === r.slug);
+      if(r.hidden){ if(i >= 0 && r.slug !== "freddy") ARTISTS.splice(i, 1); }
+      else if(i < 0) ARTISTS.push({ id:r.slug, name:r.name });
+    });
+  }catch(e){}
+}
 const ARTIST_COLORS = { tj:"#c14a3a", ariana:"#7b4fa3", makenzi:"#d9822b", aaron:"#3f6fb5", austin:"#2f7d55", doug:"#2a8a8a", freddy:"#8a6d3b" };
 function artistName(id){ const a = ARTISTS.find(x => x.id === id); return a ? a.name : id; }
 function setupMasterUI(){
@@ -774,7 +788,7 @@ function renderMasterLegend(){
   ARTISTS.forEach(a => {
     if(a.id === "freddy" && !masterBk.some(r => r.artist_id === "freddy")) return;
     const sp = document.createElement("span"), sw = document.createElement("i");
-    sw.style.background = ARTIST_COLORS[a.id] || "#888"; sp.append(sw, document.createTextNode(a.name)); lg.appendChild(sp);
+    sw.style.background = colorFor(a.id); sp.append(sw, document.createTextNode(a.name)); lg.appendChild(sp);
   });
 }
 function masterDayAppts(key){
@@ -801,7 +815,7 @@ function renderMasterGrid(){
     const ev = document.createElement("div"); ev.className = "cal-day-events";
     const appts = masterDayAppts(key);
     appts.slice(0, MAXL).forEach(x => {
-      const l = document.createElement("span"); l.className = "m-line"; l.style.borderLeftColor = ARTIST_COLORS[x.artist.id] || "#888";
+      const l = document.createElement("span"); l.className = "m-line"; l.style.borderLeftColor = colorFor(x.artist.id);
       l.textContent = x.g.startTime.replace(":00", "").replace(" AM", "a").replace(" PM", "p") + " " + x.artist.name;
       l.title = x.artist.name + " " + x.g.startTime + "\u2013" + x.g.endTime + " \u2014 " + (x.g.name || "Appointment");
       ev.appendChild(l);
@@ -826,7 +840,7 @@ function renderMasterDay(){
     const appts = groups.filter(g => g.type === "booking");
     total += appts.length;
     if(a.id === "freddy" && !groups.length) return;
-    const card = document.createElement("div"); card.className = "md-artist"; card.style.borderLeft = "4px solid " + (ARTIST_COLORS[a.id] || "#888");
+    const card = document.createElement("div"); card.className = "md-artist"; card.style.borderLeft = "4px solid " + (colorFor(a.id));
     const head = document.createElement("div"); head.className = "md-artist-head";
     const h4 = document.createElement("h4"); h4.textContent = a.name;
     const small = document.createElement("small"); small.textContent = appts.length + (appts.length === 1 ? " appointment" : " appointments"); h4.appendChild(small);

@@ -23,3 +23,26 @@ create policy "Managers delete artists" on public.site_artists for delete to aut
 
 -- Lets managers remove (hide) the original artists, e.g. when someone leaves.
 alter table public.site_artists add column if not exists hidden boolean default false;
+
+-- When an artist is removed from the website, delete their booking calendar too
+-- (appointments, blocked time and the link to their login). TJ, Ariana and the Freddy test page are protected.
+create or replace function public.cleanup_removed_artist()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare s text := null;
+begin
+  if tg_op = 'DELETE' then
+    if coalesce(old.hidden, false) = false and old.slug not in ('tj','ariana','makenzi','aaron','austin','doug') then s := old.slug; end if;
+  elsif coalesce(new.hidden, false) = true and (tg_op = 'INSERT' or coalesce(old.hidden, false) = false) then
+    s := new.slug;
+  end if;
+  if s is not null and s not in ('tj','ariana','freddy') then
+    delete from public.bookings where artist_id = s;
+    delete from public.blocked_slots where artist_id = s;
+    delete from public.artist_profiles where artist_id = s;
+  end if;
+  if tg_op = 'DELETE' then return old; end if;
+  return new;
+end $$;
+drop trigger if exists site_artists_cleanup on public.site_artists;
+create trigger site_artists_cleanup after insert or update or delete on public.site_artists
+  for each row execute function public.cleanup_removed_artist();
