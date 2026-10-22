@@ -20,3 +20,6 @@ drop policy if exists "Managers change artists" on public.site_artists;
 create policy "Managers change artists" on public.site_artists for update to authenticated using (public.can_manage_portfolios()) with check (public.can_manage_portfolios());
 drop policy if exists "Managers delete artists" on public.site_artists;
 create policy "Managers delete artists" on public.site_artists for delete to authenticated using (public.can_manage_portfolios());
+
+-- Lets managers remove (hide) the original artists, e.g. when someone leaves.
+alter table public.site_artists add column if not exists hidden boolean default false;

@@ -209,3 +209,5 @@ right away to add a caption. "Done" (or the Manage button) turns it off; "Sign o
 Slideshow editing: run supabase_slides.sql once, then managers see "Edit slideshow" on the homepage in Manage mode.
 
 Adding artists: run supabase_artists.sql once. In Manage mode, TJ/Ariana/Freddy see a "+" card in Meet the Artists and a "+ Add artist" button by the gallery tabs. New artists get a page at artist.html?a=<name>.
+
+Removing/editing original artists: re-run supabase_artists.sql (adds a "hidden" column). In Manage mode every artist card has Edit; Makenzi, Aaron, Austin and Doug can be removed and restored.

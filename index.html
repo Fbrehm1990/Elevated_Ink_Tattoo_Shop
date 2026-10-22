@@ -637,11 +637,11 @@ async function loadFeatured(){
   const feat = [];
   const seen = new Set();
   // Newest uploads (by any artist) go first, most recent in the first spot.
-  const known = new Set([...STATIC_ARTISTS, ...DYN_ARTISTS.map(x => x.slug)]);
+  const known = new Set([...STATIC_ARTISTS.filter(a => !HIDDEN_ARTISTS.includes(a)), ...DYN_ARTISTS.map(x => x.slug)]);
   const uploadedRows = rows.filter(r => known.has(r.artist_id) && !r.hidden && !(base[r.artist_id] || []).some(p => p.file === r.src))
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 12);
   uploadedRows.forEach(r => { seen.add(r.src); feat.push({ artist:r.artist_id, img:r.src }); });
-  [...STATIC_ARTISTS, ...DYN_ARTISTS.map(x => x.slug)].forEach(a => {
+  [...STATIC_ARTISTS.filter(a => !HIDDEN_ARTISTS.includes(a)), ...DYN_ARTISTS.map(x => x.slug)].forEach(a => {
     const mine = rows.filter(r => r.artist_id === a);
     const bySrc = {}; mine.forEach(r => bySrc[r.src] = r);
     const staticItems = base[a] || [], staticSet = new Set(staticItems.map(p => p.file));
@@ -655,7 +655,7 @@ async function loadFeatured(){
     renderGallery(activeFilter);
   }
 }
-let DYN_ARTISTS = [];
+let DYN_ARTISTS = [], HIDDEN_ARTISTS = [];
 function artistHref(slug){ return STATIC_ARTISTS.includes(slug) ? slug + ".html" : "artist.html?a=" + encodeURIComponent(slug); }
 async function loadArtists(){
   let rows = [];
@@ -663,8 +663,23 @@ async function loadArtists(){
     const r = await fetch(SB_URL + "/rest/v1/site_artists?select=*&order=position.asc,created_at.asc", { headers:{ apikey: SB_KEY } });
     if(r.ok) rows = await r.json();
   }catch(e){}
+  HIDDEN_ARTISTS = rows.filter(r => r.hidden).map(r => r.slug);
+  rows = rows.filter(r => !r.hidden && !STATIC_ARTISTS.includes(r.slug));
   DYN_ARTISTS = rows;
+  // text/photo saved for the original six artists (from the artist_bios table)
+  let bios = [];
+  try{ const r = await fetch(SB_URL + "/rest/v1/artist_bios?select=artist_id,role,bio,photo", { headers:{ apikey: SB_KEY } }); if(r.ok) bios = await r.json(); }catch(e){}
   document.querySelectorAll(".artist-card[data-slug], .gtab[data-dyn]").forEach(n => n.remove());
+  document.querySelectorAll(".artist-card .artist-link[href$='.html']").forEach(l => {
+    const slug = l.getAttribute("href").replace(".html", ""); if(!STATIC_ARTISTS.includes(slug)) return;
+    const card = l.closest(".artist-card"); card.dataset.static = slug;
+    const gone = HIDDEN_ARTISTS.includes(slug); card.style.display = gone ? "none" : "";
+    const tab = document.querySelector('.gtab[data-filter="' + slug + '"]'); if(tab && gone) tab.style.display = "none"; else if(tab) tab.style.display = "";
+    const b = bios.find(x => x.artist_id === slug); if(!b) return;
+    if(b.role && b.role.trim()) card.querySelector(".role").textContent = b.role.trim();
+    if(b.bio && b.bio.trim()) card.querySelector("p").textContent = b.bio.trim().split(/\n/)[0].slice(0, 180);
+    if(b.photo && /^https:\/\//.test(b.photo)){ const ph = card.querySelector(".artist-photo"); ph.textContent = ""; const im = document.createElement("img"); im.src = b.photo; im.alt = ""; ph.appendChild(im); }
+  });
   const grid = document.querySelector(".artist-grid"), tabs = document.getElementById("galleryTabs");
   rows.forEach(a => {
     ARTIST_NAMES[a.slug] = a.name;

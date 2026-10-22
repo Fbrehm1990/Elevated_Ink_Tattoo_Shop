@@ -365,6 +365,8 @@ async function loadProfileText(){
   }
 }
 loadProfileText();
+// If this artist was removed from the site, send visitors to the homepage.
+fetch(SB_URL + "/rest/v1/site_artists?slug=eq." + ARTIST + "&hidden=eq.true&select=slug", { headers:{ apikey: SB_KEY } }).then(r => r.ok ? r.json() : []).then(a => { if(a.length) location.replace("index.html#about"); }).catch(() => {});
 
 const lb = document.getElementById("lightbox"), lbImg = document.getElementById("lbImg"), lbMeta = document.getElementById("lbMeta");
 let lbIdx = 0;
