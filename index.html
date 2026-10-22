@@ -670,8 +670,8 @@ async function loadArtists(){
   let bios = [];
   try{ const r = await fetch(SB_URL + "/rest/v1/artist_bios?select=artist_id,role,bio,photo", { headers:{ apikey: SB_KEY } }); if(r.ok) bios = await r.json(); }catch(e){}
   document.querySelectorAll(".artist-card[data-slug], .gtab[data-dyn]").forEach(n => n.remove());
-  document.querySelectorAll(".artist-card .artist-link[href$='.html']").forEach(l => {
-    const slug = l.getAttribute("href").replace(".html", ""); if(!STATIC_ARTISTS.includes(slug)) return;
+  document.querySelectorAll(".artist-card .artist-link").forEach(l => {
+    const slug = (l.getAttribute("href") || "").split(/[?#]/)[0].split("/").filter(Boolean).pop().replace(/\.html$/, ""); if(!STATIC_ARTISTS.includes(slug)) return;
     const card = l.closest(".artist-card"); card.dataset.static = slug;
     const gone = HIDDEN_ARTISTS.includes(slug); card.style.display = gone ? "none" : "";
     const tab = document.querySelector('.gtab[data-filter="' + slug + '"]'); if(tab && gone) tab.style.display = "none"; else if(tab) tab.style.display = "";
