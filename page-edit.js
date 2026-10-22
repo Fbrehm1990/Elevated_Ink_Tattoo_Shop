@@ -468,7 +468,7 @@
         ["tj","ariana","freddy"].filter(canEditArtist).forEach(id => pick.appendChild(el("option", { value:id, text:"For " + (NAMES[id] || id) })));
         if(cur) pick.value = cur; pick.style.display = pick.options.length < 2 ? "none" : "";
       }
-      let aov = null, fName, fRole, fBio, fIg, fPrev, fMsg, fSave, fDel, fFile, editing = null, newPhoto = null, delSure = false;
+      let aov = null, fInv, fName, fRole, fBio, fIg, fPrev, fMsg, fSave, fDel, fFile, editing = null, newPhoto = null, delSure = false;
       const sty = n => { n.style.cssText = "width:100%;padding:13px 14px;font:inherit;font-size:16px;background:#17130e;color:#ece0c3;border:2px solid #443a2c;margin-bottom:16px;box-sizing:border-box;"; return n; };
       async function refreshAll(){ if(window.EIArtists) await window.EIArtists.reload(); await syncArtists(); }
       async function openArtist(slug){
@@ -480,13 +480,32 @@
           fFile = el("input", { type:"file", accept:"image/jpeg,image/png,image/webp", style:"display:none;" });
           const bPhoto = el("button", { type:"button", class:"pe-btn ghost small", text:"Choose artist photo" });
           fMsg = el("div", { class:"pe-msg", role:"status" });
+          fInv = el("div", { style:"border-top:1px solid #443a2c;padding-top:14px;margin-bottom:16px;display:none;" });
+          const invBtn = el("button", { type:"button", class:"pe-btn ghost small", text:"🔗 Create sign-up link" });
+          const invOut = el("input", { type:"text", readonly:"readonly" }); invOut.style.cssText = "display:none;width:100%;padding:10px;font:inherit;font-size:14px;background:#17130e;color:#ece0c3;border:2px solid #443a2c;margin-top:10px;box-sizing:border-box;";
+          const invNote = el("p", { class:"sub", text:"Send this link to the artist so they can pick their own email and password. It works once and expires in 7 days." }); invNote.style.cssText = "display:none;margin:8px 0 0;font-size:13px;";
+          fInv.append(el("label", { class:"lbl", text:"Artist login" }), invBtn, invOut, invNote);
+          invBtn.addEventListener("click", async () => {
+            if(!editing) return;
+            invBtn.disabled = true; fMsg.textContent = "";
+            try{
+              await sb.from("artist_invites").delete().eq("artist_id", editing.slug).is("used_at", null);
+              const r = await sb.from("artist_invites").insert({ artist_id: editing.slug }).select("code").single();
+              if(r.error) throw r.error;
+              invOut.value = location.origin + "/join.html?code=" + r.data.code; invOut.style.display = "block"; invNote.style.display = "block";
+              invBtn.textContent = "🔗 Make a new link"; invOut.focus(); invOut.select();
+              try{ await navigator.clipboard.writeText(invOut.value); fMsg.style.color = ""; fMsg.textContent = "Link copied. Paste it into a text or email."; }catch(e){ fMsg.textContent = "Copy the link above and send it to the artist."; }
+            }catch(err){ fMsg.textContent = "Couldn't make the link (" + (err.message || err) + "). Has supabase_invites.sql been run?"; }
+            invBtn.disabled = false;
+          });
+          fInv._reset = () => { invOut.style.display = "none"; invOut.value = ""; invNote.style.display = "none"; invBtn.textContent = "🔗 Create sign-up link"; };
           fSave = el("button", { type:"button", class:"pe-btn big", text:"Save" });
           fDel = el("button", { type:"button", class:"pe-btn danger", text:"Remove artist" });
           const cancel = el("button", { type:"button", class:"pe-btn ghost", text:"Cancel" });
           aov = el("div", { class:"pe-overlay", role:"dialog", "aria-modal":"true" }, [el("div", { class:"pe-box" }, [
             el("h3", { id:"peArtTitle", text:"Add an artist" }), el("p", { class:"sub", text:"They will appear in Meet the Artists and as a Gallery tab." }),
             el("label", { class:"lbl", text:"Name" }), fName, el("label", { class:"lbl", text:"Title" }), fRole, el("label", { class:"lbl", text:"Bio (optional)" }), fBio,
-            el("label", { class:"lbl", text:"Instagram (optional)" }), fIg, fPrev, el("div", { style:"margin-bottom:16px;" }, [bPhoto]), fFile, fMsg,
+            el("label", { class:"lbl", text:"Instagram (optional)" }), fIg, fPrev, el("div", { style:"margin-bottom:16px;" }, [bPhoto]), fFile, fInv, fMsg,
             el("div", { class:"pe-actions" }, [fDel, el("div", { class:"grp" }, [cancel, fSave])])])]);
           document.body.appendChild(aov);
           cancel.addEventListener("click", () => aov.classList.remove("open"));
@@ -500,6 +519,7 @@
         fName.value = ""; fRole.value = "Resident Artist"; fBio.value = ""; fIg.value = ""; fPrev.style.display = "none"; fPrev.removeAttribute("src");
         document.getElementById("peArtTitle").textContent = slug ? "Edit artist" : "Add an artist";
         fDel.style.display = slug && !CANT_REMOVE.includes(slug) ? "" : "none";
+        fInv._reset(); fInv.style.display = slug ? "block" : "none";
         aov.classList.add("open");
         if(slug && STATIC.includes(slug)){
           const { data } = await sb.from("artist_bios").select("*").eq("artist_id", slug).maybeSingle();
@@ -521,9 +541,9 @@
       async function saveArtist(){
         const name = fName.value.trim();
         if(!name){ fMsg.textContent = "Please type the artist's name."; return; }
-        fSave.disabled = true; fMsg.textContent = "Saving…";
+        fSave.disabled = true; fMsg.textContent = "Saving…"; let createdSlug = null;
         try{
-          const slug = editing ? editing.slug : slugFor(name);
+          const slug = editing ? editing.slug : slugFor(name); createdSlug = editing ? null : slug;
           let photo = editing ? editing.photo : "", photo_path = editing ? editing.photo_path : null, oldPath = null;
           if(newPhoto){
             const blob = await toJpeg(newPhoto, 900);
@@ -540,7 +560,8 @@
           else res = await sb.from("site_artists").insert(Object.assign({ slug, position: dynRows.length + 1 }, rec));
           if(res.error) throw res.error;
           if(oldPath) await sb.storage.from(BUCKET).remove([oldPath]);
-          aov.classList.remove("open"); await refreshAll(); flash(editing ? "Artist saved ✓" : name + " added ✓");
+          aov.classList.remove("open"); await refreshAll(); flash(editing ? "Artist saved ✓" : name + " added ✓ — a calendar was created too");
+          if(createdSlug){ await openArtist(createdSlug); fMsg.textContent = name + " was added. Create a sign-up link below so they can set up their own login."; }
         }catch(err){ fMsg.textContent = "Sorry, that didn't save (" + (err.message || err) + "). Has supabase_artists.sql been run?"; }
         fSave.disabled = false;
       }

@@ -213,3 +213,5 @@ Adding artists: run supabase_artists.sql once. In Manage mode, TJ/Ariana/Freddy 
 Removing/editing original artists: re-run supabase_artists.sql (adds a "hidden" column). In Manage mode every artist card has Edit; Makenzi, Aaron, Austin and Doug can be removed and restored.
 
 Calendars: every artist added with "+" automatically appears in the master scheduler (view dropdown, month calendar, colors). Removing an artist deletes their calendar via the trigger in supabase_artists.sql (re-run it). To let a new artist sign in: create their login in Supabase Auth, then run: insert into artist_profiles(user_id, artist_id) select id, 'their-slug' from auth.users where email = 'their@email';
+
+Artist self-signup: run supabase_invites.sql once; in Supabase Authentication settings turn ON "Allow new users to sign up". Managers open an artist card (Manage mode, Edit) and press "Create sign-up link"; the artist opens join.html?code=... and picks their own email and password, which is linked to their page automatically.
