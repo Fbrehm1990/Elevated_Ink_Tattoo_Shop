@@ -578,8 +578,11 @@
           const plus = el("button", { type:"button", class:"artist-card pe-art-tool", "aria-label":"Add an artist" });
           plus.style.cssText = "display:flex;align-items:center;justify-content:center;min-height:200px;font:700 64px 'Alfa Slab One',serif;color:#d4a94f;background:transparent;border:3px dashed #d4a94f;cursor:pointer;";
           plus.textContent = "+"; plus.addEventListener("click", () => openArtist(null)); grid.appendChild(plus);
-          grid.querySelectorAll(".artist-card[data-slug], .artist-card[data-static]").forEach(c => {
-            if(c.style.display === "none") return;
+          grid.querySelectorAll(".artist-card").forEach(c => {
+            if(c.style.display === "none" || c.classList.contains("pe-art-tool")) return;
+            const lk = c.querySelector("a.artist-link");
+            const fromLink = lk ? (lk.getAttribute("href") || "").replace(/\.html$/, "") : "";
+            if(!c.dataset.slug && !c.dataset.static){ if(STATIC.includes(fromLink)) c.dataset.static = fromLink; else return; }
             const t = el("button", { type:"button", class:"pe-art-tool", text:"✎ Edit" });
             t.style.cssText = "position:absolute;top:8px;right:8px;z-index:2;background:#d4a94f;color:#221c14;border:0;font:700 13px 'Libre Franklin',sans-serif;padding:6px 11px;cursor:pointer;";
             t.addEventListener("click", e => { e.preventDefault(); openArtist(c.dataset.slug || c.dataset.static); }); c.appendChild(t);

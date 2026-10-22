@@ -1,3 +1,17 @@
 [build]
   command = ""
   publish = "."
+
+# Always check for the newest page and script so edits show up right after a deploy.
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "no-cache"
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "no-cache"
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "no-cache"
