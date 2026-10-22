@@ -326,6 +326,7 @@
       bar.style.display = on ? "flex" : "none";
       
       try{ sessionStorage.setItem("eiManage", on ? "1" : "0"); }catch(e){}
+      artistTools();
       if(slideBtn) slideBtn.style.display = on ? "block" : "none";
       if(on) defaultTip(); else close();
       if(redraw !== false) await refresh();
@@ -445,6 +446,126 @@
         smsg.textContent = ""; draw();
       }
       slideBtn.addEventListener("click", e => { e.stopPropagation(); openSlides(); });
+    }
+
+
+    /* ----- add / edit / remove artists (homepage, managers only) ----- */
+    let artistTools = () => {};
+    if(IS_GALLERY && isManager){
+      const RESERVED = ["tj","ariana","makenzi","aaron","austin","doug","freddy","artist","staff","index","scheduler"];
+      let dynRows = [];
+      async function syncArtists(){
+        try{
+          const r = await sb.from("site_artists").select("slug,name").order("position", { ascending:true });
+          dynRows = (r.data || []);
+          dynRows.forEach(a => { NAMES[a.slug] = a.name; });
+        }catch(e){}
+        // photo picker: the three managers + any artist added with "+"
+        const cur = pick.value; pick.innerHTML = "";
+        ["tj","ariana","freddy"].filter(canEditArtist).concat(dynRows.map(a => a.slug)).forEach(id => pick.appendChild(el("option", { value:id, text:"For " + (NAMES[id] || id) })));
+        if(cur) pick.value = cur; pick.style.display = pick.options.length < 2 ? "none" : "";
+      }
+      let aov = null, fName, fRole, fBio, fIg, fPrev, fMsg, fSave, fDel, fFile, editing = null, newPhoto = null, delSure = false;
+      const sty = n => { n.style.cssText = "width:100%;padding:13px 14px;font:inherit;font-size:16px;background:#17130e;color:#ece0c3;border:2px solid #443a2c;margin-bottom:16px;box-sizing:border-box;"; return n; };
+      async function refreshAll(){ if(window.EIArtists) await window.EIArtists.reload(); await syncArtists(); }
+      async function openArtist(slug){
+        addStyles();
+        if(!aov){
+          fName = sty(el("input", { type:"text", placeholder:"Artist name" })); fRole = sty(el("input", { type:"text", placeholder:"Resident Artist" }));
+          fBio = sty(el("textarea", { rows:"5", placeholder:"A few sentences about the artist" })); fIg = sty(el("input", { type:"text", placeholder:"Instagram handle (optional)" }));
+          fPrev = el("img", { alt:"" }); fPrev.style.cssText = "width:96px;height:96px;object-fit:cover;border-radius:50%;margin:0 0 10px;display:none;";
+          fFile = el("input", { type:"file", accept:"image/jpeg,image/png,image/webp", style:"display:none;" });
+          const bPhoto = el("button", { type:"button", class:"pe-btn ghost small", text:"Choose artist photo" });
+          fMsg = el("div", { class:"pe-msg", role:"status" });
+          fSave = el("button", { type:"button", class:"pe-btn big", text:"Save" });
+          fDel = el("button", { type:"button", class:"pe-btn danger", text:"Remove artist" });
+          const cancel = el("button", { type:"button", class:"pe-btn ghost", text:"Cancel" });
+          aov = el("div", { class:"pe-overlay", role:"dialog", "aria-modal":"true" }, [el("div", { class:"pe-box" }, [
+            el("h3", { id:"peArtTitle", text:"Add an artist" }), el("p", { class:"sub", text:"They will appear in Meet the Artists and as a Gallery tab." }),
+            el("label", { class:"lbl", text:"Name" }), fName, el("label", { class:"lbl", text:"Title" }), fRole, el("label", { class:"lbl", text:"Bio (optional)" }), fBio,
+            el("label", { class:"lbl", text:"Instagram (optional)" }), fIg, fPrev, el("div", { style:"margin-bottom:16px;" }, [bPhoto]), fFile, fMsg,
+            el("div", { class:"pe-actions" }, [fDel, el("div", { class:"grp" }, [cancel, fSave])])])]);
+          document.body.appendChild(aov);
+          cancel.addEventListener("click", () => aov.classList.remove("open"));
+          aov.addEventListener("click", e => { if(e.target === aov) aov.classList.remove("open"); });
+          bPhoto.addEventListener("click", () => fFile.click());
+          fFile.addEventListener("change", () => { const f = fFile.files[0]; fFile.value = ""; if(!f) return; newPhoto = f; fPrev.src = URL.createObjectURL(f); fPrev.style.display = "block"; });
+          fSave.addEventListener("click", saveArtist);
+          fDel.addEventListener("click", removeArtist);
+        }
+        editing = null; newPhoto = null; delSure = false; fMsg.textContent = ""; fDel.textContent = "Remove artist";
+        fName.value = ""; fRole.value = "Resident Artist"; fBio.value = ""; fIg.value = ""; fPrev.style.display = "none"; fPrev.removeAttribute("src");
+        document.getElementById("peArtTitle").textContent = slug ? "Edit artist" : "Add an artist";
+        fDel.style.display = slug ? "" : "none";
+        aov.classList.add("open");
+        if(slug){
+          const { data } = await sb.from("site_artists").select("*").eq("slug", slug).maybeSingle();
+          if(data){ editing = data; fName.value = data.name; fRole.value = data.role || ""; fBio.value = data.bio || ""; fIg.value = data.instagram || ""; if(data.photo){ fPrev.src = data.photo; fPrev.style.display = "block"; } }
+        }
+        setTimeout(() => fName.focus(), 50);
+      }
+      function slugFor(name){
+        let base = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "artist", s = base, n = 2;
+        const taken = new Set([...RESERVED, ...dynRows.map(a => a.slug)]);
+        while(taken.has(s)) s = base + "-" + (n++);
+        return s;
+      }
+      async function saveArtist(){
+        const name = fName.value.trim();
+        if(!name){ fMsg.textContent = "Please type the artist's name."; return; }
+        fSave.disabled = true; fMsg.textContent = "Saving…";
+        try{
+          const slug = editing ? editing.slug : slugFor(name);
+          let photo = editing ? editing.photo : "", photo_path = editing ? editing.photo_path : null, oldPath = null;
+          if(newPhoto){
+            const blob = await toJpeg(newPhoto, 900);
+            const path = "artists/" + slug + "-" + Date.now() + ".jpg";
+            const up = await sb.storage.from(BUCKET).upload(path, blob, { contentType:"image/jpeg", cacheControl:"31536000" });
+            if(up.error) throw up.error;
+            oldPath = photo_path; photo = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl; photo_path = path;
+          }
+          const rec = { name, role:fRole.value.trim() || "Resident Artist", bio:fBio.value.trim(), instagram:fIg.value.trim().replace(/^@/, ""), photo:photo || "", photo_path:photo_path || null };
+          let res;
+          if(editing) res = await sb.from("site_artists").update(rec).eq("slug", slug);
+          else res = await sb.from("site_artists").insert(Object.assign({ slug, position: dynRows.length + 1 }, rec));
+          if(res.error) throw res.error;
+          if(oldPath) await sb.storage.from(BUCKET).remove([oldPath]);
+          aov.classList.remove("open"); await refreshAll(); flash(editing ? "Artist saved ✓" : name + " added ✓");
+        }catch(err){ fMsg.textContent = "Sorry, that didn't save (" + (err.message || err) + "). Has supabase_artists.sql been run?"; }
+        fSave.disabled = false;
+      }
+      async function removeArtist(){
+        if(!editing) return;
+        if(!delSure){ delSure = true; fDel.textContent = "Yes, remove"; fMsg.textContent = "This takes the artist off the website. Their photos are kept."; return; }
+        fDel.disabled = true;
+        const res = await sb.from("site_artists").delete().eq("slug", editing.slug);
+        fDel.disabled = false;
+        if(res.error){ fMsg.textContent = "Sorry, that didn't work (" + res.error.message + ")."; return; }
+        if(editing.photo_path) await sb.storage.from(BUCKET).remove([editing.photo_path]);
+        aov.classList.remove("open"); await refreshAll(); flash("Artist removed ✓");
+      }
+      artistTools = () => {
+        document.querySelectorAll(".pe-art-tool").forEach(n => n.remove());
+        if(!API.on) return;
+        const grid = document.querySelector(".artist-grid"), tabs = document.getElementById("galleryTabs");
+        if(grid){
+          const plus = el("button", { type:"button", class:"artist-card pe-art-tool", "aria-label":"Add an artist" });
+          plus.style.cssText = "display:flex;align-items:center;justify-content:center;min-height:200px;font:700 64px 'Alfa Slab One',serif;color:#d4a94f;background:transparent;border:3px dashed #d4a94f;cursor:pointer;";
+          plus.textContent = "+"; plus.addEventListener("click", () => openArtist(null)); grid.appendChild(plus);
+          grid.querySelectorAll(".artist-card[data-slug]").forEach(c => {
+            const t = el("button", { type:"button", class:"pe-art-tool", text:"✎ Edit" });
+            t.style.cssText = "position:absolute;top:8px;right:8px;z-index:2;background:#d4a94f;color:#221c14;border:0;font:700 13px 'Libre Franklin',sans-serif;padding:6px 11px;cursor:pointer;";
+            t.addEventListener("click", e => { e.preventDefault(); openArtist(c.dataset.slug); }); c.appendChild(t);
+          });
+        }
+        if(tabs){
+          const pt = el("button", { type:"button", class:"pe-art-tool", text:"+ Add artist", "aria-label":"Add an artist" });
+          pt.style.cssText = "font:700 13px 'Libre Franklin',sans-serif;padding:9px 16px;border:2px dashed #d4a94f;background:transparent;color:#d4a94f;cursor:pointer;";
+          pt.addEventListener("click", () => openArtist(null)); tabs.appendChild(pt);
+        }
+      };
+      document.addEventListener("ei-artists", () => artistTools());
+      await syncArtists();
     }
 
     switchHandler = on => setMode(on);
