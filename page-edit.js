@@ -463,9 +463,9 @@
           dynRows = all.filter(a => !a.hidden && !STATIC.includes(a.slug));
           dynRows.forEach(a => { NAMES[a.slug] = a.name; });
         }catch(e){}
-        // photo picker: the three managers + any artist added with "+"
+        // photo picker: only TJ, Ariana and Freddy
         const cur = pick.value; pick.innerHTML = "";
-        ["tj","ariana","freddy"].filter(canEditArtist).concat(dynRows.map(a => a.slug)).forEach(id => pick.appendChild(el("option", { value:id, text:"For " + (NAMES[id] || id) })));
+        ["tj","ariana","freddy"].filter(canEditArtist).forEach(id => pick.appendChild(el("option", { value:id, text:"For " + (NAMES[id] || id) })));
         if(cur) pick.value = cur; pick.style.display = pick.options.length < 2 ? "none" : "";
       }
       let aov = null, fName, fRole, fBio, fIg, fPrev, fMsg, fSave, fDel, fFile, editing = null, newPhoto = null, delSure = false;
